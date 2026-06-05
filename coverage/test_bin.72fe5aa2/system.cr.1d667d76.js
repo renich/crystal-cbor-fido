@@ -1,0 +1,30 @@
+var data = {lines:[
+{"lineNum":"    1","line":"require \"crystal/system\""},
+{"lineNum":"    2","line":""},
+{"lineNum":"    3","line":"module System"},
+{"lineNum":"    4","line":"  # Returns the hostname."},
+{"lineNum":"    5","line":"  #"},
+{"lineNum":"    6","line":"  # NOTE: Maximum of 253 characters are allowed, with 2 bytes reserved for"},
+{"lineNum":"    7","line":"  # storage."},
+{"lineNum":"    8","line":"  # In practice, many platforms will disallow anything longer than 63 characters."},
+{"lineNum":"    9","line":"  #"},
+{"lineNum":"   10","line":"  # ```"},
+{"lineNum":"   11","line":"  # System.hostname # => \"host.example.org\""},
+{"lineNum":"   12","line":"  # ```"},
+{"lineNum":"   13","line":"  def self.hostname : String","class":"lineNoCov","hits":"0","possible_hits":"1",},
+{"lineNum":"   14","line":"    Crystal::System.hostname","class":"lineNoCov","hits":"0","possible_hits":"1",},
+{"lineNum":"   15","line":"  end"},
+{"lineNum":"   16","line":""},
+{"lineNum":"   17","line":"  # Returns the number of logical processors available to the system."},
+{"lineNum":"   18","line":"  #"},
+{"lineNum":"   19","line":"  # ```"},
+{"lineNum":"   20","line":"  # System.cpu_count # => 4"},
+{"lineNum":"   21","line":"  # ```"},
+{"lineNum":"   22","line":"  def self.cpu_count : Int32"},
+{"lineNum":"   23","line":"    Crystal::System.cpu_count.to_i32!"},
+{"lineNum":"   24","line":"  end"},
+{"lineNum":"   25","line":"end"},
+]};
+var percent_low = 25;var percent_high = 75;
+var header = { "command" : "test_bin", "date" : "2026-06-05 05:36:10", "instrumented" : 2, "covered" : 0,};
+var merged_data = [];

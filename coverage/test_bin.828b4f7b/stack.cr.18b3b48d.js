@@ -1,0 +1,32 @@
+var data = {lines:[
+{"lineNum":"    1","line":"class Fiber"},
+{"lineNum":"    2","line":"  # :nodoc:"},
+{"lineNum":"    3","line":"  struct Stack"},
+{"lineNum":"    4","line":"    getter pointer : Void*"},
+{"lineNum":"    5","line":"    getter bottom : Void*"},
+{"lineNum":"    6","line":"    getter size : Int32"},
+{"lineNum":"    7","line":"    getter? reusable : Bool"},
+{"lineNum":"    8","line":""},
+{"lineNum":"    9","line":"    # Constructor for thread stacks (main fibers)."},
+{"lineNum":"   10","line":"    def initialize(@pointer : Void*, @bottom : Void*, *, @reusable = false)","class":"lineCov","hits":"4","order":"629","possible_hits":"4",},
+{"lineNum":"   11","line":"      # FIXME: sometimes gc/boehm reports weird stack limits on linux (over"},
+{"lineNum":"   12","line":"      # 2GB) at least, so we always cast to i32 without overflow checks."},
+{"lineNum":"   13","line":"      @size = (@bottom - @pointer).to_i32!","class":"lineCov","hits":"1","order":"630","possible_hits":"1",},
+{"lineNum":"   14","line":"    end"},
+{"lineNum":"   15","line":""},
+{"lineNum":"   16","line":"    # Constructor for fiber stacks."},
+{"lineNum":"   17","line":"    def initialize(@pointer : Void*, @size : Int32, *, @reusable = false)","class":"lineCov","hits":"4","order":"6838","possible_hits":"4",},
+{"lineNum":"   18","line":"      @bottom = @pointer + @size","class":"lineCov","hits":"1","order":"6839","possible_hits":"1",},
+{"lineNum":"   19","line":"    end"},
+{"lineNum":"   20","line":""},
+{"lineNum":"   21","line":"    def first_addressable_pointer : Void**","class":"lineCov","hits":"2","order":"6840","possible_hits":"2",},
+{"lineNum":"   22","line":"      ptr = @bottom                 # stacks grow down","class":"lineCov","hits":"1","order":"6841","possible_hits":"1",},
+{"lineNum":"   23","line":"      ptr -= sizeof(Void*)          # point to first addressable pointer","class":"lineCov","hits":"1","order":"6842","possible_hits":"1",},
+{"lineNum":"   24","line":"      ptr.align_down(16).as(Void**) # align to 16 bytes","class":"lineCov","hits":"1","order":"6847","possible_hits":"1",},
+{"lineNum":"   25","line":"    end"},
+{"lineNum":"   26","line":"  end"},
+{"lineNum":"   27","line":"end"},
+]};
+var percent_low = 25;var percent_high = 75;
+var header = { "command" : "test_bin", "date" : "2026-06-05 05:35:11", "instrumented" : 8, "covered" : 8,};
+var merged_data = [];

@@ -1,0 +1,32 @@
+var data = {lines:[
+{"lineNum":"    1","line":"module Crystal"},
+{"lineNum":"    2","line":"  module DWARF"},
+{"lineNum":"    3","line":"    struct Strings"},
+{"lineNum":"    4","line":"      def initialize(@io : IO::FileDescriptor, @offset : UInt32 | UInt64, size)","class":"lineNoCov","hits":"0","possible_hits":"4",},
+{"lineNum":"    5","line":"        # Read a good chunk of bytes to decode strings faster"},
+{"lineNum":"    6","line":"        # (avoid seeking/reading the IO too many times)"},
+{"lineNum":"    7","line":"        @buffer = Bytes.new(Math.min(Math.max(16384, size), io.info.size - offset))","class":"lineNoCov","hits":"0","possible_hits":"2",},
+{"lineNum":"    8","line":"        pos = @io.pos","class":"lineNoCov","hits":"0","possible_hits":"1",},
+{"lineNum":"    9","line":"        @io.read_fully(@buffer)","class":"lineNoCov","hits":"0","possible_hits":"1",},
+{"lineNum":"   10","line":"        @io.pos = pos","class":"lineNoCov","hits":"0","possible_hits":"1",},
+{"lineNum":"   11","line":"      end"},
+{"lineNum":"   12","line":""},
+{"lineNum":"   13","line":"      def decode(strp)","class":"lineNoCov","hits":"0","possible_hits":"3",},
+{"lineNum":"   14","line":"        # See if we can read it from the buffer"},
+{"lineNum":"   15","line":"        if strp < @buffer.size","class":"lineNoCov","hits":"0","possible_hits":"3",},
+{"lineNum":"   16","line":"          index = @buffer.index(\'\\0\'.ord, offset: strp)","class":"lineNoCov","hits":"0","possible_hits":"2",},
+{"lineNum":"   17","line":"          return String.new(@buffer[strp, index - strp]) if index","class":"lineNoCov","hits":"0","possible_hits":"5",},
+{"lineNum":"   18","line":"        end"},
+{"lineNum":"   19","line":""},
+{"lineNum":"   20","line":"        # If not, try directly from the IO"},
+{"lineNum":"   21","line":"        @io.seek(@offset + strp) do","class":"lineNoCov","hits":"0","possible_hits":"8",},
+{"lineNum":"   22","line":"          @io.gets(\'\\0\', chomp: true).to_s","class":"lineNoCov","hits":"0","possible_hits":"2",},
+{"lineNum":"   23","line":"        end"},
+{"lineNum":"   24","line":"      end"},
+{"lineNum":"   25","line":"    end"},
+{"lineNum":"   26","line":"  end"},
+{"lineNum":"   27","line":"end"},
+]};
+var percent_low = 25;var percent_high = 75;
+var header = { "command" : "test_bin", "date" : "2026-06-05 05:37:16", "instrumented" : 11, "covered" : 0,};
+var merged_data = [];
