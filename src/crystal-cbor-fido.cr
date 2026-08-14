@@ -3,7 +3,7 @@ require "big"
 module Crystal::Cbor::Fido
   VERSION = "0.1.1"
 
-  alias Value = Nil | Bool | Int64 | Float64 | String | Bytes | Array(Value) | Hash(Value, Value)
+  alias Value = (Bool | Int64 | Float64 | String | Bytes | Array(Value) | Hash(Value, Value))?
 
   module SipHash
     class State
@@ -577,7 +577,6 @@ module Crystal::Cbor::Fido
       when 25 then Float16.to_float64(@io.read_bytes(UInt16, IO::ByteFormat::BigEndian))
       when 26 then @io.read_bytes(Float32, IO::ByteFormat::BigEndian).to_f64
       when 27 then @io.read_bytes(Float64, IO::ByteFormat::BigEndian)
-      else         nil
       end
     end
   end
