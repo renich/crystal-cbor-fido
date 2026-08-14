@@ -1,7 +1,7 @@
 require "big"
 
 module Crystal::Cbor::Fido
-  VERSION = "0.1.0"
+  VERSION = "0.1.1"
 
   alias Value = Nil | Bool | Int64 | Float64 | String | Bytes | Array(Value) | Hash(Value, Value)
 
@@ -189,61 +189,62 @@ module Crystal::Cbor::Fido
 
     EXP_MAX = 0x1F
 
-    # ameba:disable Metrics/CyclomaticComplexity
     def self.from_float64(value : Float64) : UInt16
-      if value.nan?
-        return 0x7E00_u16
-      end
-
-      if value.infinite?
-        return value > 0 ? 0x7C00_u16 : 0xFC00_u16
+      if special = encode_special(value)
+        return special
       end
 
       bits = value.unsafe_as(UInt64)
       sign = ((bits >> 63) & 1).to_u16
-
-      if value == 0.0
-        return (sign << 15).to_u16
-      end
-
       exponent = ((bits >> 52) & 0x7FF).to_i32 - 1023
       mantissa = bits & 0xFFFFFFFFFFFFF_u64
 
       if exponent > 15
-        return (sign << 15 | 0x7C00).to_u16
-      end
-
-      if exponent < -24
-        return (sign << 15).to_u16
-      end
-
-      if exponent >= -14
-        new_exp = exponent + 15
-
-        new_man = ((mantissa >> 42) & 0x3FF).to_u16
-
-        round_bit = (mantissa >> 41) & 1
-        if round_bit == 1
-          new_man += 1
-          if new_man > 0x3FF
-            new_man = 0
-            new_exp += 1
-          end
-        end
-
-        (sign << 15 | (new_exp.to_u16 << 10) | new_man).to_u16
+        (sign << 15 | 0x7C00).to_u16
+      elsif exponent < -24
+        (sign << 15).to_u16
+      elsif exponent >= -14
+        encode_normalized(sign, exponent, mantissa)
       else
-        shift = -14 - exponent
-
-        if shift > 10
-          return (sign << 15).to_u16
-        end
-
-        subnormal_man = ((1_u64 << 52) | mantissa) >> (42 + shift)
-        new_man = (subnormal_man & 0x3FF).to_u16
-
-        (sign << 15 | new_man).to_u16
+        encode_subnormal(sign, exponent, mantissa)
       end
+    end
+
+    private def self.encode_special(value : Float64) : UInt16?
+      if value.nan?
+        0x7E00_u16
+      elsif value.infinite?
+        value > 0 ? 0x7C00_u16 : 0xFC00_u16
+      elsif value == 0.0
+        bits = value.unsafe_as(UInt64)
+        sign = ((bits >> 63) & 1).to_u16
+        (sign << 15).to_u16
+      end
+    end
+
+    private def self.encode_normalized(sign : UInt16, exponent : Int32, mantissa : UInt64) : UInt16
+      new_exp = exponent + 15
+      new_man = ((mantissa >> 42) & 0x3FF).to_u16
+
+      round_bit = (mantissa >> 41) & 1
+      if round_bit == 1
+        new_man += 1
+        if new_man > 0x3FF
+          new_man = 0
+          new_exp += 1
+        end
+      end
+
+      (sign << 15 | (new_exp.to_u16 << 10) | new_man).to_u16
+    end
+
+    private def self.encode_subnormal(sign : UInt16, exponent : Int32, mantissa : UInt64) : UInt16
+      shift = -14 - exponent
+      return (sign << 15).to_u16 if shift > 10
+
+      subnormal_man = ((1_u64 << 52) | mantissa) >> (42 + shift)
+      new_man = (subnormal_man & 0x3FF).to_u16
+      (sign << 15 | new_man).to_u16
     end
 
     def self.to_float64(bits : UInt16) : Float64
