@@ -13,15 +13,15 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [0.1.1] - 2026-08-13
 ====================
 
-Refactored
-----------
+.. rubric:: Refactored
+
 - Decomposed ``Float16.from_float64`` into modular helper methods (``encode_special``, ``encode_normalized``, ``encode_subnormal``), removing lint cyclomatic complexity suppression.
 
 [0.1.0] - 2026-06-05
 ====================
 
-Added
------
+.. rubric:: Added
+
 - Initial orchestrated release of the architecture.
 - Full TDD specifications with >80% code coverage.
 - Code of Honor integration.
