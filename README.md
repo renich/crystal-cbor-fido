@@ -3,15 +3,15 @@
 [![CI](https://gitlab.com/renich/crystal-cbor-fido/badges/master/pipeline.svg)](https://gitlab.com/renich/crystal-cbor-fido/-/pipelines)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-A high-performance, strictly compliant, and constant-time **Canonical CBOR** (RFC 8949) encoder and decoder implementation for [Crystal](https://crystal-lang.org/), tailored for FIDO2 and CTAP2 hardware security keys.
+A high-performance, strictly compliant, and hardened **Canonical CBOR** (RFC 8949) encoder and decoder implementation for [Crystal](https://crystal-lang.org/), designed specifically for FIDO2 and CTAP2 protocol compliance.
 
 ## Features
 
-- **Strict Canonical CBOR Compliance**: Enforces deterministic key ordering (length first, then lexicographical order) and rejects duplicate map keys.
-- **IEEE 754 Half-Precision (`Float16`) Support**: Full bitwise manipulation with exact conversion and representation verification.
-- **Constant-Time Security**: Safe byte comparisons and bounds checking to mitigate timing side-channels.
-- **Hash-DoS Protection**: Employs SipHash-2-4 for dictionary key hashing.
-- **Zero Allocations & Overflow Safety**: Wrapping arithmetic (`&+`, `&-`) and explicit memory boundaries.
+- **Strict Canonical CBOR Compliance**: Enforces minimal integer representations, deterministic map key ordering (shorter length first, then byte-wise lexicographical), and rejects duplicate keys.
+- **IEEE 754 Half-Precision (`Float16`) Support**: Exact subnormal precision decoding ($1 \times 2^{-24} \approx 5.96 \times 10^{-8}$) and round-to-nearest-even bit manipulation.
+- **Protocol Hardening**: Rejects undefined simple values (23), reserved tokens, and invalid UTF-8 byte sequences.
+- **Defensive Resource Bounding**: Enforces a maximum nesting depth of 16 and caps maximum array/string/map sizes to prevent stack and heap exhaustion attacks.
+- **Full 64-bit Integer Support**: Fully supports `Int64` and `UInt64` scalar ranges without precision loss.
 
 ## Installation
 
@@ -21,7 +21,7 @@ Add this to your application's `shard.yml`:
 dependencies:
   crystal-cbor-fido:
     github: renich/crystal-cbor-fido
-    version: ~> 0.1.1
+    version: ~> 0.1.2
 ```
 
 Then run:
@@ -36,20 +36,16 @@ shards install
 require "crystal-cbor-fido"
 
 # Encoding a canonical CBOR payload
-io = IO::Memory.new
-encoder = Crystal::Cbor::Fido::Encoder.new(io)
-
 data = {} of Crystal::Cbor::Fido::Value => Crystal::Cbor::Fido::Value
 data["user_id"] = 100_i64
 data["challenge"] = "rand123"
 
-encoder.encode(data)
-bytes = io.to_slice
+# Convenience encoder
+bytes = Crystal::Cbor::Fido.encode(data)
 puts "Encoded CBOR (Hex): #{bytes.hexstring}"
 
-# Decoding canonical CBOR payload
-decoder = Crystal::Cbor::Fido::Decoder.new(IO::Memory.new(bytes))
-decoded_data = decoder.decode
+# Convenience decoder
+decoded_data = Crystal::Cbor::Fido.decode(bytes)
 puts "Decoded Data: #{decoded_data.inspect}"
 ```
 
@@ -68,6 +64,7 @@ make docs     # Generates API documentation into docs/technical/api
 
 - **API Documentation**: Generated HTML docs located at [`docs/technical/api/`](docs/technical/api/index.html).
 - **Technical Specification**: [`docs/technical/spec.rst`](docs/technical/spec.rst)
+- **White Paper**: [`docs/whitepaper.rst`](docs/whitepaper.rst)
 - **Project Roadmap**: [`docs/project/roadmap.rst`](docs/project/roadmap.rst)
 - **Changelog**: [`CHANGELOG.rst`](CHANGELOG.rst)
 - **Code of Honor**: [`docs/technical/CODE_OF_HONOR.rst`](docs/technical/CODE_OF_HONOR.rst)
