@@ -11,7 +11,8 @@ Deliver core native Crystal implementation of Canonical CBOR encoding and decodi
 
 Milestones & Deliverables
 =========================
+
 * **[CBOR-001] Integer & Byte String Encoding**: Support major types 0, 1, 2, 3 with exact canonical length representations.
-* **[CBOR-002] Deterministic Map Key Ordering**: Implement canonical sorting (length first, then lexicographical order) and duplicate key rejection.
+* **[CBOR-002] Deterministic Map Key Ordering**: Implement canonical sorting by byte length first, then lexicographical order, with duplicate key rejection.
 * **[CBOR-003] IEEE 754 Float16 Support**: Support half-precision floats with exact bitwise conversion and canonical representation checks.
-* **[CBOR-004] SipHash Protection**: Protect dictionary structures against algorithmic complexity attacks using SipHash-2-4.
+* **[CBOR-004] Resource Bounds Protection**: Enforce container nesting depth limits and allocation caps to prevent denial-of-service attacks.

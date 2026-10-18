@@ -3,10 +3,10 @@ require "./spec_helper"
 describe "Adversarial Code Review - CBOR FIDO" do
   describe "Depth Bounds" do
     it "prevents infinite recursion in Encoder" do
-      arr = [] of Crystal::Cbor::Fido::Value
+      arr = Array(Crystal::Cbor::Fido::Value).new
       current = arr
       17.times do
-        next_arr = [] of Crystal::Cbor::Fido::Value
+        next_arr = Array(Crystal::Cbor::Fido::Value).new
         current << next_arr
         current = next_arr
       end
@@ -59,6 +59,19 @@ describe "Adversarial Code Review - CBOR FIDO" do
         decoder.decode
       end
     end
+
+    it "prevents cumulative allocation budget exceeding MAX_LEN across nested containers" do
+      io = IO::Memory.new
+      io.write_byte(0x82_u8) # Array of 2 (allocates 2)
+      io.write_byte(0x5a_u8) # Byte string of 10_000_000 bytes (total 10_000_002 > MAX_LEN)
+      io.write_bytes(10_000_000_u32, IO::ByteFormat::BigEndian)
+      io.rewind
+
+      decoder = Crystal::Cbor::Fido::Decoder.new(io)
+      expect_raises(Crystal::Cbor::Fido::CborError, /Total allocation size exceeds/) do
+        decoder.decode
+      end
+    end
   end
 
   describe "FIDO Canonical Map Encoding & Duplicates" do
@@ -84,6 +97,16 @@ describe "Adversarial Code Review - CBOR FIDO" do
       dec2.decode.should eq("z")
       dec2.decode # value 2
       dec2.decode.should eq("aa")
+    end
+
+    it "rejects duplicate canonical keys when encoding map" do
+      map = Hash(Crystal::Cbor::Fido::Value, Crystal::Cbor::Fido::Value).new
+      map[Float64::NAN] = 1_i64
+      map[Float64::NAN] = 2_i64
+
+      expect_raises(Crystal::Cbor::Fido::CanonicalError, /Duplicate key in canonical CBOR map/) do
+        Crystal::Cbor::Fido.encode(map)
+      end
     end
 
     it "rejects duplicate keys when decoding map" do

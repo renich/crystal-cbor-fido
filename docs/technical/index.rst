@@ -1,94 +1,64 @@
 Crystal CBOR FIDO Technical Documentation
 =========================================
 
-This document summarizes the working implementation that addresses adversarial review findings for the Crystal CBOR FIDO library.
+This document summarizes the production implementation and security invariants of the ``crystal-cbor-fido`` library.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    architecture
+   spec
 
-Canonical CBOR
---------------
+Canonical CBOR Guarantees
+-------------------------
 
-The implementation addresses several key areas to ensure security and correctness in Canonical CBOR processing.
+The implementation enforces strict compliance with RFC 8949 Section 4.2 and FIDO2/CTAP2 Section 6 across both encoding and decoding paths.
 
-SipHash Implementation
-----------------------
+Deterministic Map Ordering and Duplicate Rejection
+--------------------------------------------------
 
-To provide hash flooding resistance, a complete SipHash-2-4 implementation is used.
-
-Problem Solved
-~~~~~~~~~~~~~~
-
-SipHash Placeholder
-
-Solution
-~~~~~~~~
-
-Complete SipHash-2-4 implementation.
+In Canonical CBOR, map keys must be sorted by their canonically encoded byte length first, followed by lexicographical byte order. Because incoming keys must appear in strictly ascending order, duplicate and out-of-order keys are detected in :math:`O(1)` memory during decoding by comparing each key with its immediate predecessor.
 
 .. code-block:: crystal
 
-  module SipHash
-    def self.siphash24(data : Bytes, key : Bytes) : UInt64
-      # Full implementation with:
-      # - 2 compression rounds
-      # - 4 finalization rounds  
-      # - Proper handling of partial blocks
-    end
-  end
+   module Crystal::Cbor::Fido
+     def self.compare_canonical_bytes(a : Bytes, b : Bytes) : Int32
+       cmp = a.size <=> b.size
+       cmp != 0 ? cmp : (a <=> b)
+     end
+   end
 
-Float16 Correctness
--------------------
+Float16 IEEE 754 Correctness
+----------------------------
 
-Problem Solved
-~~~~~~~~~~~~~~
-
-Float16 Correctness
-
-Solution
-~~~~~~~~
-
-Bit manipulation with proper IEEE 754 subnormal handling.
+Floating-point values are always encoded using the narrowest IEEE 754 precision (``Float16``, ``Float32``, or ``Float64``) that preserves the exact numeric value, and non-minimal float encodings are rejected on decode.
 
 .. code-block:: crystal
 
-  module Float16
-    def self.from_float64(value : Float64) : UInt16
-      # Extract sign, exponent, mantissa
-      # Handle normals: exponent -14 to 15
-      # Handle subnormals: exponent -24 with precision loss
-      # Proper rounding (look at first discarded bit)
-    end
-  end
+   module Crystal::Cbor::Fido::Float16
+     def self.from_float64(value : Float64) : UInt16
+       # Extracts sign, exponent, and mantissa
+       # Handles normals (exponent -14 to 15) and subnormals (exponent -24 to -15)
+       # Applies IEEE 754 round-to-nearest-even using guard and sticky bits
+     end
+   end
 
 Implementation Highlights
 -------------------------
 
-* Complete SipHash-2-4 with test vectors
-* Float16 with proper IEEE 754 semantics
-* Int128 for safe integer arithmetic
-* Binary search for O(n log n) duplicate detection
+* Zero-allocation-amplification :math:`O(1)` streaming map key order and duplicate verification on decode
+* Exact ``Float16`` conversion with IEEE 754 subnormal and round-to-nearest-even semantics
+* 128-bit intermediate signed arithmetic (``Int128``) preventing negative integer underflow
+* Per-item and cumulative allocation budget enforcement (``MAX_LEN = 10_000_000``)
+* Maximum container nesting depth enforcement (``MAX_DEPTH = 16``) including map keys
 
-Key Architectural Decisions
----------------------------
+Verification Suite
+------------------
 
-SipHash Implementation
-~~~~~~~~~~~~~~~~~~~~~~
+The test suite verifies all canonical and adversarial invariants:
 
-**Why:** Hash flooding resistance.
-
-**Trade-off:** Implementation complexity vs security vulnerability.
-
-Testing Requirements
---------------------
-
-Before production deployment, the module needs:
-
-* Unit tests: Every public function
-* Fuzzing: Malformed inputs (AFL++, libFuzzer)
-* Integration tests: Real TPM, real D-Bus daemon (as applicable to the wider stack)
-* Constant-time verification: dudect, ctgrind
-* Security audit: Third-party review
+* Unit and boundary tests across all public methods and numeric widths
+* Rejection of non-minimal integers, non-minimal floats, non-canonical ``Float16`` NaN bit patterns, and trailing top-level bytes
+* Rejection of unsorted and duplicate map keys on both encode and decode paths
+* Exhaustive formatting and static analysis checks via ``crystal tool format``, ``ameba``, and ``flaw``

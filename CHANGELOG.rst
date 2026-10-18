@@ -4,11 +4,32 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
-The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`_,
-and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
+The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`__,
+and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`__.
 
 [Unreleased]
 ============
+
+[0.2.0] - 2026-10-18
+====================
+
+.. rubric:: Security
+
+- Enforced strict canonical float decoding in ``Decoder``: rejected non-canonical ``Float16`` NaN bit patterns (``bits != 0x7e00``) and non-minimal ``Float32``/``Float64`` encodings when representable in a narrower IEEE 754 format.
+- Added top-level trailing byte rejection in ``Crystal::Cbor::Fido.decode``.
+- Added duplicate canonical map key detection in ``Encoder#encode`` after key serialization and sorting.
+- Propagated nesting ``@depth`` into ``canonical_key_bytes`` in ``Encoder`` and ``Decoder`` to prevent depth-limit bypass via nested map keys.
+- Enforced cumulative allocation budget tracking (``@total_allocated <= MAX_LEN``) across ``Decoder`` instances.
+
+.. rubric:: Fixed
+
+- Wrapped multi-byte ``IO`` reads in ``Decoder`` to convert ``IO::EOFError`` into ``CborError`` on truncated payloads.
+
+.. rubric:: Changed
+
+- Consolidated ``Encoder`` major-type and length header serialization into ``write_type_and_arg`` and wrote pre-encoded ``entry.key_bytes`` directly when encoding maps.
+- Extracted ``Crystal::Cbor::Fido.compare_canonical_bytes`` and ``Crystal::Cbor::Fido.fits_in_float32_exactly?`` for shared use across ``Encoder`` and ``Decoder``.
+- Updated Crystal version requirement to ``>= 1.21.0``, removed tracked ``shard.lock``, and hardened ``GNUmakefile``, ``.ameba.yml``, and ``.gitlab-ci.yml``.
 
 [0.1.2] - 2026-09-19
 ====================

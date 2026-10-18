@@ -1,16 +1,16 @@
 name: crystal-cbor-fido
-version: 0.1.2
+version: 0.2.0
 
 authors:
   - Rénich Bon Ćirić <renich@woralelandia.com>
 
-crystal: '>= 1.19.1'
+crystal: '>= 1.21.0'
 
 license: AGPL-3.0-or-later
 
 development_dependencies:
   ameba:
-    branch: master
     github: crystal-ameba/ameba
+    branch: master
   flaw:
     github: kdairatchi/flaw

@@ -1,9 +1,11 @@
 module Crystal::Cbor::Fido
+  # IEEE 754 half-precision (`binary16`) floating-point conversion and canonical representability utilities.
   module Float16
     SIGN_MASK = 0x8000_u16
     EXP_MASK  = 0x7C00_u16
     MAN_MASK  = 0x03FF_u16
 
+    # Converts a `Float64` to its 16-bit IEEE 754 half-precision bit pattern using round-to-nearest-even.
     def self.from_float64(value : Float64) : UInt16
       if special = encode_special(value)
         return special
@@ -14,36 +16,38 @@ module Crystal::Cbor::Fido
       exponent = ((bits >> 52) & 0x7FF).to_i32 - 1023
       mantissa = bits & 0xFFFFFFFFFFFFF_u64
 
-      if exponent > 15
-        (sign << 15 | 0x7C00).to_u16
-      elsif exponent < -24
-        (sign << 15).to_u16
-      elsif exponent >= -14
+      case
+      when exponent > 15
+        (sign << 15) | EXP_MASK
+      when exponent < -24
+        sign << 15
+      when exponent >= -14
         encode_normalized(sign, exponent, mantissa)
       else
         encode_subnormal(sign, exponent, mantissa)
       end
     end
 
+    # Converts a 16-bit IEEE 754 half-precision bit pattern into a `Float64`.
     def self.to_float64(bits : UInt16) : Float64
-      sign = (bits >> 15) & 1
-      exponent = ((bits >> 10) & 0x1F).to_i32
-      mantissa = (bits & 0x3FF).to_u64
+      sign = (bits & SIGN_MASK) >> 15
+      exponent = ((bits & EXP_MASK) >> 10).to_i32
+      mantissa = (bits & MAN_MASK).to_u64
 
-      if exponent == 0x1F
-        return mantissa == 0 ? (sign == 0 ? Float64::INFINITY : -Float64::INFINITY) : Float64::NAN
-      end
-
-      if exponent == 0
+      case exponent
+      when 0x1F
+        mantissa == 0 ? (sign == 0 ? Float64::INFINITY : -Float64::INFINITY) : Float64::NAN
+      when 0
         return sign == 0 ? 0.0 : -0.0 if mantissa == 0
         val = mantissa.to_f64 * (2.0 ** -24)
-        return sign == 0 ? val : -val
+        sign == 0 ? val : -val
+      else
+        val = (1.0 + (mantissa.to_f64 / 1024.0)) * (2.0 ** (exponent - 15))
+        sign == 0 ? val : -val
       end
-
-      val = (1.0 + (mantissa.to_f64 / 1024.0)) * (2.0 ** (exponent - 15))
-      sign == 0 ? val : -val
     end
 
+    # Returns `true` if *value* can be losslessly represented as an IEEE 754 half-precision float (`Float16`).
     def self.exactly_representable?(value : Float64) : Bool
       return true if value.nan? || value.infinite? || value == 0.0
 
@@ -53,38 +57,39 @@ module Crystal::Cbor::Fido
     end
 
     private def self.encode_special(value : Float64) : UInt16?
-      if value.nan?
+      case
+      when value.nan?
         0x7E00_u16
-      elsif value.infinite?
-        value > 0 ? 0x7C00_u16 : 0xFC00_u16
-      elsif value == 0.0
+      when value.infinite?
+        value > 0 ? EXP_MASK : (SIGN_MASK | EXP_MASK)
+      when value == 0.0
         bits = value.unsafe_as(UInt64)
         sign = ((bits >> 63) & 1).to_u16
-        (sign << 15).to_u16
+        sign << 15
       end
     end
 
     private def self.encode_normalized(sign : UInt16, exponent : Int32, mantissa : UInt64) : UInt16
       new_exp = exponent + 15
-      new_man = ((mantissa >> 42) & 0x3FF).to_u16
+      new_man = ((mantissa >> 42) & MAN_MASK).to_u16
       round_bit = (mantissa >> 41) & 1
       sticky = (mantissa & 0x1FFFFFFFFFF_u64) != 0 ? 1 : 0
 
       if round_bit == 1 && (sticky == 1 || (new_man & 1) == 1)
         new_man += 1
-        if new_man > 0x3FF
-          new_man = 0
+        if new_man > MAN_MASK
+          new_man = 0_u16
           new_exp += 1
-          return (sign << 15 | 0x7C00).to_u16 if new_exp >= 31
+          return (sign << 15) | EXP_MASK if new_exp >= 31
         end
       end
 
-      (sign << 15 | (new_exp.to_u16 << 10) | new_man).to_u16
+      (sign << 15) | (new_exp.to_u16 << 10) | new_man
     end
 
     private def self.encode_subnormal(sign : UInt16, exponent : Int32, mantissa : UInt64) : UInt16
       shift = -14 - exponent
-      return (sign << 15).to_u16 if shift > 10
+      return sign << 15 if shift > 10
 
       full_man = (1_u64 << 52) | mantissa
       round_pos = 42 + shift - 1
@@ -97,7 +102,7 @@ module Crystal::Cbor::Fido
         new_man += 1
       end
 
-      (sign << 15 | (new_man & 0x3FF)).to_u16
+      (sign << 15) | (new_man & MAN_MASK)
     end
   end
 end

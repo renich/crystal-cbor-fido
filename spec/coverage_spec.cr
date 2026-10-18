@@ -6,18 +6,18 @@ describe Crystal::Cbor::Fido do
       # Smallest positive subnormal: 2**-24
       val = Crystal::Cbor::Fido::Float16.from_float64(2.0 ** -24)
       val.should eq(0x0001_u16)
-      Crystal::Cbor::Fido::Float16.to_float64(val).should eq(5.9604644775390625e-8)
+      Crystal::Cbor::Fido::Float16.to_float64(val).should eq(5.960_464_477_539_062_5e-8)
 
       # A regular subnormal
       val2 = Crystal::Cbor::Fido::Float16.from_float64(2.0 ** -15)
       val2.should eq(0x0200_u16)
-      Crystal::Cbor::Fido::Float16.to_float64(val2).should eq(0.000030517578125)
+      Crystal::Cbor::Fido::Float16.to_float64(val2).should eq(0.000_030_517_578_125)
     end
 
     it "handles negative subnormal floats" do
       val = Crystal::Cbor::Fido::Float16.from_float64(-(2.0 ** -24))
       val.should eq(0x8001_u16)
-      Crystal::Cbor::Fido::Float16.to_float64(val).should eq(-5.9604644775390625e-8)
+      Crystal::Cbor::Fido::Float16.to_float64(val).should eq(-5.960_464_477_539_062_5e-8)
     end
 
     it "handles Float16.to_float64 NaN" do
@@ -32,18 +32,18 @@ describe Crystal::Cbor::Fido do
 
   describe "Encoder/Decoder Numeric Coverage" do
     it "handles large unsigned integers" do
-      vals = [24_i64, 255_i64, 256_i64, 65535_i64, 65536_i64, 4294967295_i64, 4294967296_i64]
-      vals.each do |v|
-        encoded = Crystal::Cbor::Fido.encode(v)
-        Crystal::Cbor::Fido.decode(encoded).should eq(v)
+      vals = [24_i64, 255_i64, 256_i64, 65_535_i64, 65_536_i64, 4_294_967_295_i64, 4_294_967_296_i64]
+      vals.each do |val|
+        encoded = Crystal::Cbor::Fido.encode(val)
+        Crystal::Cbor::Fido.decode(encoded).should eq(val)
       end
     end
 
     it "handles negative integers" do
-      vals = [-1_i64, -24_i64, -25_i64, -256_i64, -65536_i64, -4294967296_i64, -4294967297_i64]
-      vals.each do |v|
-        encoded = Crystal::Cbor::Fido.encode(v)
-        Crystal::Cbor::Fido.decode(encoded).should eq(v)
+      vals = [-1_i64, -24_i64, -25_i64, -256_i64, -65_536_i64, -4_294_967_296_i64, -4_294_967_297_i64]
+      vals.each do |val|
+        encoded = Crystal::Cbor::Fido.encode(val)
+        Crystal::Cbor::Fido.decode(encoded).should eq(val)
       end
     end
 

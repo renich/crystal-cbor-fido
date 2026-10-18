@@ -4,46 +4,42 @@ Crystal CBOR FIDO Architecture
 Overview
 --------
 
-This document outlines the core architectural components and decisions for the FIDO Canonical CBOR implementation. The design focuses on memory safety, determinism, correctness, and adherence to strict FIDO specifications.
+This document outlines the core architectural components and design decisions for the FIDO Canonical CBOR implementation. The design focuses on memory safety, determinism, correctness, and adherence to strict RFC 8949 Section 4.2 and FIDO2/CTAP2 Section 6 specifications.
 
 Core Components
 ---------------
 
-SipHash
-~~~~~~~
+Types and Error Hierarchy
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The SipHash module provides a robust SipHash-2-4 implementation designed to prevent hash flooding attacks. It enforces strict constraints, such as requiring exactly a 16-byte key.
+The ``types.cr`` module defines the recursive ``Value`` union type and a structured exception hierarchy:
 
-SipHashSet
-~~~~~~~~~~
-
-A set data structure built on top of SipHash.
-
-* Uses constant-time equality to avoid timing attacks, rejecting partial matches or differing lengths safely.
-* Dynamically scales by rehashing when the capacity exceeds 75%.
-* Rejects duplicate insertions efficiently.
+* ``CborError``: Base exception raised for malformed CBOR structures, invalid UTF-8 strings, truncated streams, or allocation limit violations.
+* ``CanonicalError``: Subclass of ``CborError`` raised when a payload violates Canonical CBOR rules, including non-minimal integer or floating-point widths, non-canonical ``Float16`` NaN bit patterns, unsorted or duplicate map keys, forbidden simple values, or trailing top-level bytes.
+* ``DepthError``: Subclass of ``CborError`` raised when container nesting exceeds ``MAX_DEPTH`` (16).
 
 Float16
 ~~~~~~~
 
-IEEE 754 Half-Precision floating-point implementation. FIDO CBOR heavily utilizes Float16 to minimize payload sizes.
+IEEE 754 half-precision (``binary16``) floating-point implementation in ``float16.cr``. FIDO CBOR utilizes ``Float16`` to minimize payload sizes.
 
-* Handles normal and subnormal numbers, along with special values like NaN, Infinity, and zero.
-* Provides functionality to check if a Float64 value is exactly representable as Float16 without precision loss.
+* Handles normal and subnormal numbers with IEEE 754 round-to-nearest-even using guard and sticky bit inspection, along with special values such as canonical quiet NaN (``0x7e00``), Infinity, ``+0.0``, and ``-0.0``.
+* Provides ``Float16.exactly_representable?`` to determine whether a ``Float64`` value can be losslessly represented in 16 bits.
 
 Encoder
 ~~~~~~~
 
-The Encoder module is responsible for encoding native structures according to strict FIDO Canonical CBOR rules.
+The ``Encoder`` class in ``encoder.cr`` serializes native Crystal ``Value`` structures according to FIDO Canonical CBOR rules.
 
-* Automatically selects minimal length representation for integers.
-* Prefers Float16 representation if the original float is exactly representable.
-* Enforces strict map key sorting: keys are sorted by length first (shortest to longest), then by byte-wise lexicographical comparison.
+* Automatically selects minimal width representations for unsigned and negative integers via ``write_type_and_arg``.
+* Selects the narrowest lossless IEEE 754 representation (``Float16``, ``Float32``, or ``Float64``) for floating-point numbers.
+* Enforces canonical map key ordering: keys are pre-encoded with nesting depth propagation, sorted by byte length first and then byte-wise lexicographical order, verified against duplicate canonical keys, and written directly to the output stream.
 
 Decoder
 ~~~~~~~
 
-The Decoder is strictly designed to parse CBOR types back to native Crystal types.
+The ``Decoder`` class in ``decoder.cr`` parses CBOR byte streams back to native Crystal ``Value`` instances with strict validation.
 
-* Raises explicit exceptions on invalid or truncated formats.
-* Resolves types securely based on byte width.
+* Enforces minimal integer and floating-point width encodings, canonical ``Float16`` NaN bit patterns (``0x7e00``), and strict ascending canonical key order in maps with :math:`O(1)` state overhead.
+* Enforces a maximum nesting depth of 16 and tracks both per-item and cumulative allocations against a 10 MB budget (``MAX_LEN``).
+* Converts truncated stream reads (``IO::EOFError``) into deterministic ``CborError`` exceptions.

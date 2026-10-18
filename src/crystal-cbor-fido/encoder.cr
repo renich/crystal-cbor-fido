@@ -1,28 +1,26 @@
 module Crystal::Cbor::Fido
+  # Serializes Crystal `Value` objects into deterministic FIDO2/CTAP2 Canonical CBOR.
   class Encoder
     MAX_DEPTH = 16
 
+    # Represents a pre-encoded map entry used for canonical key sorting and duplicate detection.
     record MapEntry, key_bytes : Bytes, key : Value, value : Value do
       include Comparable(MapEntry)
 
+      # Compares two map entries by their canonical key byte representations.
       def <=>(other : MapEntry) : Int32
-        cmp = key_bytes.size <=> other.key_bytes.size
-        return cmp unless cmp == 0
-        key_bytes.size.times do |i|
-          diff = key_bytes[i].to_i32 - other.key_bytes[i].to_i32
-          return diff <=> 0 unless diff == 0
-        end
-        0
+        Crystal::Cbor::Fido.compare_canonical_bytes(key_bytes, other.key_bytes)
       end
     end
 
     @io : IO
     @depth : Int32
 
-    def initialize(@io : IO)
-      @depth = 0
+    # Creates a new `Encoder` writing to *io* starting at nesting *depth*.
+    def initialize(@io : IO, @depth : Int32 = 0) : Nil
     end
 
+    # Encodes *value* to the underlying `IO`, enforcing `MAX_DEPTH` and canonical map sorting.
     def encode(value : Value) : Nil
       @depth += 1
       raise DepthError.new("Max nesting depth of #{MAX_DEPTH} exceeded") if @depth > MAX_DEPTH
@@ -44,15 +42,15 @@ module Crystal::Cbor::Fido
       end
     end
 
-    private def encode_null
+    private def encode_null : Nil
       @io.write_byte(0xf6_u8)
     end
 
-    private def encode_bool(b : Bool)
+    private def encode_bool(b : Bool) : Nil
       @io.write_byte(b ? 0xf5_u8 : 0xf4_u8)
     end
 
-    private def encode_int(i : Int64)
+    private def encode_int(i : Int64) : Nil
       if i >= 0
         encode_uint(i.to_u64)
       else
@@ -60,50 +58,22 @@ module Crystal::Cbor::Fido
       end
     end
 
-    private def encode_uint(i : UInt64)
-      if i < 24
-        @io.write_byte(i.to_u8)
-      elsif i <= UInt8::MAX
-        @io.write_byte(0x18_u8)
-        @io.write_byte(i.to_u8)
-      elsif i <= UInt16::MAX
-        @io.write_byte(0x19_u8)
-        @io.write_bytes(i.to_u16, IO::ByteFormat::BigEndian)
-      elsif i <= UInt32::MAX
-        @io.write_byte(0x1a_u8)
-        @io.write_bytes(i.to_u32, IO::ByteFormat::BigEndian)
-      else
-        @io.write_byte(0x1b_u8)
-        @io.write_bytes(i, IO::ByteFormat::BigEndian)
-      end
+    private def encode_uint(i : UInt64) : Nil
+      write_type_and_arg(0x00_u8, i)
     end
 
-    private def encode_negative(i : Int64)
+    private def encode_negative(i : Int64) : Nil
       encoded = (-1_i128 - i.to_i128).to_u64
-
-      if encoded < 24
-        @io.write_byte(0x20_u8 | encoded.to_u8)
-      elsif encoded <= UInt8::MAX
-        @io.write_byte(0x38_u8)
-        @io.write_byte(encoded.to_u8)
-      elsif encoded <= UInt16::MAX
-        @io.write_byte(0x39_u8)
-        @io.write_bytes(encoded.to_u16, IO::ByteFormat::BigEndian)
-      elsif encoded <= UInt32::MAX
-        @io.write_byte(0x3a_u8)
-        @io.write_bytes(encoded.to_u32, IO::ByteFormat::BigEndian)
-      else
-        @io.write_byte(0x3b_u8)
-        @io.write_bytes(encoded, IO::ByteFormat::BigEndian)
-      end
+      write_type_and_arg(0x20_u8, encoded)
     end
 
-    private def encode_float(f : Float64)
-      if Float16.exactly_representable?(f)
+    private def encode_float(f : Float64) : Nil
+      case
+      when Float16.exactly_representable?(f)
         f16 = Float16.from_float64(f)
         @io.write_byte(0xf9_u8)
         @io.write_bytes(f16, IO::ByteFormat::BigEndian)
-      elsif fits_in_float32_exactly?(f)
+      when Crystal::Cbor::Fido.fits_in_float32_exactly?(f)
         @io.write_byte(0xfa_u8)
         @io.write_bytes(f.to_f32.unsafe_as(UInt32), IO::ByteFormat::BigEndian)
       else
@@ -112,65 +82,64 @@ module Crystal::Cbor::Fido
       end
     end
 
-    private def fits_in_float32_exactly?(f : Float64) : Bool
-      f32 = f.to_f32
-      f32.to_f64 == f
-    rescue OverflowError
-      false
-    end
-
-    private def encode_string(s : String)
+    private def encode_string(s : String) : Nil
       bytes = s.to_slice
-      write_bytes_header(bytes.size, 0x60_u8)
+      write_type_and_arg(0x60_u8, bytes.size.to_u64)
       @io.write(bytes)
     end
 
-    private def encode_bytes(b : Bytes)
-      write_bytes_header(b.size, 0x40_u8)
+    private def encode_bytes(b : Bytes) : Nil
+      write_type_and_arg(0x40_u8, b.size.to_u64)
       @io.write(b)
     end
 
-    private def write_bytes_header(len : Int32, base : UInt8)
-      if len < 24
-        @io.write_byte(base | len.to_u8)
-      elsif len <= UInt8::MAX
-        @io.write_byte(base | 0x18_u8)
-        @io.write_byte(len.to_u8)
-      elsif len <= UInt16::MAX
-        @io.write_byte(base | 0x19_u8)
-        @io.write_bytes(len.to_u16, IO::ByteFormat::BigEndian)
-      elsif len <= UInt32::MAX
-        @io.write_byte(base | 0x1a_u8)
-        @io.write_bytes(len.to_u32, IO::ByteFormat::BigEndian)
+    private def write_type_and_arg(major_base : UInt8, value : UInt64) : Nil
+      case value
+      when 0_u64..23_u64
+        @io.write_byte(major_base | value.to_u8)
+      when 24_u64..UInt8::MAX.to_u64
+        @io.write_byte(major_base | 0x18_u8)
+        @io.write_byte(value.to_u8)
+      when (UInt8::MAX.to_u64 + 1)..UInt16::MAX.to_u64
+        @io.write_byte(major_base | 0x19_u8)
+        @io.write_bytes(value.to_u16, IO::ByteFormat::BigEndian)
+      when (UInt16::MAX.to_u64 + 1)..UInt32::MAX.to_u64
+        @io.write_byte(major_base | 0x1a_u8)
+        @io.write_bytes(value.to_u32, IO::ByteFormat::BigEndian)
       else
-        @io.write_byte(base | 0x1b_u8)
-        @io.write_bytes(len.to_u64, IO::ByteFormat::BigEndian)
+        @io.write_byte(major_base | 0x1b_u8)
+        @io.write_bytes(value, IO::ByteFormat::BigEndian)
       end
     end
 
-    private def encode_array(arr : Array(Value))
-      write_bytes_header(arr.size, 0x80_u8)
-      arr.each { |v| encode(v) }
+    private def encode_array(arr : Array(Value)) : Nil
+      write_type_and_arg(0x80_u8, arr.size.to_u64)
+      arr.each { |item| encode(item) }
     end
 
-    private def encode_map(map : Hash(Value, Value))
+    private def encode_map(map : Hash(Value, Value)) : Nil
       entries = Array(MapEntry).new(map.size)
       map.each do |key, val|
         entries << MapEntry.new(canonical_key_bytes(key), key, val)
       end
 
       entries.sort!
+      (0...(entries.size - 1)).each do |idx|
+        if entries[idx].key_bytes == entries[idx + 1].key_bytes
+          raise CanonicalError.new("Duplicate key in canonical CBOR map")
+        end
+      end
 
-      write_bytes_header(entries.size, 0xa0_u8)
+      write_type_and_arg(0xa0_u8, entries.size.to_u64)
       entries.each do |entry|
-        encode(entry.key)
+        @io.write(entry.key_bytes)
         encode(entry.value)
       end
     end
 
     private def canonical_key_bytes(key : Value) : Bytes
       mem = IO::Memory.new
-      Encoder.new(mem).encode(key)
+      Encoder.new(mem, @depth).encode(key)
       mem.to_slice
     end
   end
