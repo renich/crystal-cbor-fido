@@ -7,7 +7,7 @@ Thank you for your interest in contributing to ``crystal-cbor-fido``. We welcome
 Code of Honor
 =============
 
-All contributors are expected to uphold the principles defined in `CODE_OF_HONOR.rst <CODE_OF_HONOR.rst>`__. We build resilient, well-tested software, demand intellectual honesty, operate transparently, and verify all library behaviors empirically.
+All contributors must uphold the principles defined in `CODE_OF_HONOR.rst <CODE_OF_HONOR.rst>`__. We build resilient, well-tested software, demand intellectual honesty, operate transparently, and verify all library behaviors empirically.
 
 Development Workflow
 ====================
@@ -15,10 +15,10 @@ Development Workflow
 Prerequisites
 -------------
 
-* `Crystal <https://crystal-lang.org/>`__ (>= 1.21.0)
+* `Crystal <https://crystal-lang.org/>`__ >= 1.21.0
 * `GNU Make <https://www.gnu.org/software/make/>`__
-* `Sphinx <https://www.sphinx-doc.org/>`__ (``sphinx-build``)
-* `cRSTLint <https://gitlab.com/renich/crstlint>`__ and ``rstcheck`` (for documentation linting)
+* `Sphinx <https://www.sphinx-doc.org/>`__ ``sphinx-build``
+* `cRSTLint <https://gitlab.com/renich/crstlint>`__ and ``rstcheck`` for documentation linting
 
 Setting Up the Workspace
 ------------------------
@@ -34,6 +34,7 @@ Setting Up the Workspace
 
    .. code-block:: bash
 
+      make deps
       make all
       make doc-check
       make docs
@@ -41,7 +42,7 @@ Setting Up the Workspace
 Testing and Quality Standards
 =============================
 
-We adhere strictly to Test-Driven Development (TDD) and the principle of **Do Not Assume; Always Verify**.
+We adhere strictly to Test-Driven Development and the principle of **Do Not Assume; Always Verify**.
 
 Running Checks
 --------------
@@ -52,7 +53,7 @@ Running Checks
 
       make test
 
-* **Run static linters** (``crystal tool format --check``, Ameba, and Flaw):
+* **Run static linters** ``crystal tool format --check``, Ameba, and Flaw:
 
    .. code-block:: bash
 
@@ -80,4 +81,4 @@ We enforce the Conventional Commits specification:
 * ``docs(adrs): record decision on zero external dependencies``
 * ``test(spec): add adversarial allocation budget specs``
 
-All commits must include a ``Signed-off-by`` trailer and be authored with full technical ownership.
+All commits must be signed and authored with full technical ownership.

@@ -1,0 +1,75 @@
+direction: right
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 4
+    pad: 40
+  }
+}
+
+classes: {
+  phase_done: {
+    style: {
+      stroke: "#2F855A"
+      stroke-width: 2
+      border-radius: 8
+      fill: "#F0FFF4"
+    }
+  }
+  phase_planned: {
+    style: {
+      stroke: "#2B6CB0"
+      stroke-width: 2
+      border-radius: 8
+      fill: "#EBF8FF"
+    }
+  }
+  task_done: {
+    shape: step
+    style: {
+      stroke: "#2F855A"
+      stroke-width: 2
+      fill: "#C6F6D5"
+      font-color: "#22543D"
+    }
+  }
+  task_planned: {
+    shape: step
+    style: {
+      stroke: "#3182CE"
+      stroke-width: 2
+      fill: "#BEE3F8"
+      font-color: "#2A4365"
+    }
+  }
+}
+
+phase1: "Phase 1: MVP & Canonical Hardening [v0.2.1 Completed]" {
+  class: phase_done
+
+  t101: "TASK-101 (Task 1.1)\nTypes & Exceptions\n[FUNC-005, TECH-001, TECH-004, TECH-005]" { class: task_done }
+  t102: "TASK-102 (Task 1.2)\nFloat16 Narrowing\n[FUNC-003, TECH-002, TECH-005]" { class: task_done }
+  t103: "TASK-103 (Task 1.3)\nCanonical Encoder\n[FUNC-001, FUNC-002, TECH-001, TECH-005]" { class: task_done }
+  t104: "TASK-104 (Task 1.4)\nStrict Decoder\n[FUNC-004, TECH-003, TECH-005]" { class: task_done }
+  t105: "TASK-105 (Task 1.5)\nSAST & Docs Portal\n[FUNC-005, TECH-004, TECH-005]" { class: task_done }
+
+  t101 -> t102
+  t101 -> t103
+  t102 -> t104
+  t103 -> t104
+  t104 -> t105
+}
+
+phase2: "Phase 2: Serializable & Streaming IO [v0.3.0 Planned]" {
+  class: phase_planned
+
+  t201: "TASK-201 (Task 2.1)\nCBOR::Field Annotations\n[FUNC-006, TECH-006]" { class: task_planned }
+  t202: "TASK-202 (Task 2.2)\nCBOR::Serializable Macro\n[FUNC-006, TECH-006]" { class: task_planned }
+  t203: "TASK-203 (Task 2.3)\nBounded Streaming IO\n[FUNC-007, TECH-005, TECH-007]" { class: task_planned }
+  t204: "TASK-204 (Task 2.4)\nRFC 8949 Appendix A Vectors\n[FUNC-007, TECH-005, TECH-007]" { class: task_planned }
+
+  t201 -> t202 -> t203 -> t204
+}
+
+phase1.t105 -> phase2.t201: "Unblocks Phase 2"

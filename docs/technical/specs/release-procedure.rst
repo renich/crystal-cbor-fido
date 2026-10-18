@@ -1,18 +1,18 @@
-==================================================
-[TECH-005] Release Procedure & Versioning Playbook
-==================================================
+=========================================
+Release Procedure and Versioning Playbook
+=========================================
 
 Overview
 --------
-This document defines the deterministic, repeatable release workflow for ``crystal-cbor-fido``. It enforces Semantic Versioning (SemVer 2.0.0), Keep a Changelog 1.1.0 compliance, multi-file version alignment, local pre-push linting, signed GPG Git tags, and automated GitLab CI verification.
+This document defines the deterministic, repeatable release workflow for ``crystal-cbor-fido``. It enforces Semantic Versioning 2.0.0, Keep a Changelog 1.1.0 compliance, multi-file version alignment, local pre-push linting, signed GPG Git tags, and automated GitLab CI verification.
 
 Requirement Mapping
 -------------------
-Fulfills ``[FUNC-006]``.
+Fulfills ``[FUNC-005]``.
 
 Multi-File Version Alignment Checklist
 --------------------------------------
-Prior to tagging any release, the version string (e.g. ``0.2.1``) must be updated in four locations across the codebase:
+Prior to tagging any release, the version string (e.g., ``0.2.1``) must be updated in four locations across the codebase:
 
 #. **`shard.yml <../../../shard.yml>`__**:
 
@@ -47,8 +47,8 @@ Prior to tagging any release, the version string (e.g. ``0.2.1``) must be update
 Step-by-Step Release Execution Playbook
 ---------------------------------------
 
-Step 1: Local Quality Assurance & Spec Verification
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Local Quality Assurance and Spec Verification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Execute the full test suite, static analyzers, and documentation linters locally:
 
 .. code-block:: bash
@@ -59,8 +59,8 @@ Execute the full test suite, static analyzers, and documentation linters locally
 
 All specs must pass with 0 failures, 0 errors, 0 Ameba lint issues, 0 Flaw security findings, 0 ``crstlint`` warnings, and 0 ``rstcheck`` warnings.
 
-Step 2: Commit Version Bump & Changelog Update
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Commit Version Bump and Changelog Update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Stage and commit version changes adhering to Conventional Commit standards:
 
 .. code-block:: bash

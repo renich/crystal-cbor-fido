@@ -1,0 +1,128 @@
+direction: right
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 4
+    pad: 40
+  }
+}
+
+classes: {
+  tier: {
+    style: {
+      stroke: "#2B6CB0"
+      stroke-width: 2
+      border-radius: 8
+      fill: "#F7FAFC"
+    }
+  }
+  core_node: {
+    shape: rectangle
+    style: {
+      stroke: "#3182CE"
+      stroke-width: 2
+      border-radius: 6
+      fill: "#EBF8FF"
+      font-color: "#1A365D"
+    }
+  }
+  phase2_node: {
+    shape: rectangle
+    style: {
+      stroke: "#0D9488"
+      stroke-width: 2
+      stroke-dash: 4
+      border-radius: 6
+      fill: "#F0FDFA"
+      font-color: "#134E4A"
+    }
+  }
+  wire_node: {
+    shape: cylinder
+    style: {
+      stroke: "#DD6B20"
+      stroke-width: 2
+      fill: "#FEEBC8"
+      font-color: "#7B341E"
+    }
+  }
+  error_node: {
+    shape: hexagon
+    style: {
+      stroke: "#C53030"
+      stroke-width: 2
+      fill: "#FFF5F5"
+      font-color: "#742A2A"
+    }
+  }
+}
+
+domain: "Crystal Domain Types" {
+  class: tier
+
+  value_in: "Crystal::Cbor::Fido::Value\nBool | Int64 | UInt64 | Float64\nString | Bytes | Array | Hash | Nil" {
+    class: core_node
+  }
+
+  serializable: "CBOR::Serializable [TECH-006]\n@[CBOR::Field] & Options(strict: true)\nUnconditional Duplicate-Key Rejection" {
+    class: phase2_node
+  }
+}
+
+encode_pipeline: "Canonical Encode Pipeline [TECH-001/TECH-002]" {
+  class: tier
+
+  encoder: "Encoder [TECH-001]\nShortest-Length Headers\nMAX_DEPTH = 16" {
+    class: core_node
+  }
+
+  canonicalizer: "Canonical Key Sorter &\nFloat16 Narrower [TECH-002]\nLength-First Lexicographical Sort\nFloat64 -> Float32 -> Float16\nNaN -> 0x7e00 & +0.0 -> 0x0000" {
+    class: core_node
+  }
+
+  encoder -> canonicalizer: "Pre-serialize keys &\nnarrow IEEE 754 floats"
+}
+
+wire_layer: "Transport & Framing Layer" {
+  class: tier
+
+  wire_bytes: "CTAP2 Wire Bytes\nRFC 8949 §4.2 & CTAP2 §6\nCanonical CBOR Slice" {
+    class: wire_node
+  }
+
+  stream_io: "Streaming IO Cursor [TECH-007]\nmax_depth: 16 (MAX_DEPTH)\nmax_bytes: 1_048_576_u64\neof_check: true" {
+    class: phase2_node
+  }
+}
+
+decode_pipeline: "Strict Decode & Validation Pipeline [TECH-003/TECH-005]" {
+  class: tier
+
+  decoder: "Decoder [TECH-003]\nMinimal-Width & UTF-8 Check\nO(1) Key Order Verification\nInt128 Underflow Protection\nMAX_LEN = 10_000_000_u64" {
+    class: core_node
+  }
+
+  errors: "Exception Hierarchy [TECH-005]\nCborError\nCanonicalError\nDepthError" {
+    class: error_node
+  }
+
+  decoder -> errors: "Fail-closed on non-canonical,\ntruncated, or trailing bytes"
+}
+
+output_domain: "Validated Output" {
+  class: tier
+
+  value_out: "Crystal::Cbor::Fido::Value\nVerified Canonical AST" {
+    class: core_node
+  }
+}
+
+domain.value_in -> encode_pipeline.encoder: "Crystal::Cbor::Fido.encode"
+domain.serializable -> encode_pipeline.encoder: "to_cbor [FUNC-006]"
+encode_pipeline.canonicalizer -> wire_layer.wire_bytes: "Deterministic bytes"
+encode_pipeline.canonicalizer -> wire_layer.stream_io: "Encoder.encode(value, io)"
+wire_layer.wire_bytes -> decode_pipeline.decoder: "Crystal::Cbor::Fido.decode"
+wire_layer.stream_io -> decode_pipeline.decoder: "Decoder.decode(io) [FUNC-007]"
+decode_pipeline.decoder -> output_domain.value_out: "Validated Value"
+decode_pipeline.decoder -> domain.serializable: "from_cbor [FUNC-006]"

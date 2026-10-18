@@ -18,22 +18,22 @@ Documentation Architecture
      - Entrypoint
    * - **Business & Strategy**
      - Strategic vision, FIDO2/WebAuthn ecosystem goals, and user personas.
-     - `Business Specifications <business/spec.rst>`__
+     - :doc:`Business Specifications <business/spec>`
    * - **Functional Specifications**
-     - Requirements ``[FUNC-001]``..``[FUNC-006]``, canonical encoding/decoding contracts, and error semantics.
-     - `Functional Specifications <functional/spec.rst>`__
+     - Requirements ``[FUNC-001]``..``[FUNC-007]``, canonical encoding/decoding contracts, and error semantics.
+     - :doc:`Functional Specifications <functional/spec>`
    * - **Technical Architecture**
-     - Internal architecture, IEEE 754 ``Float16`` math, coding standards, threat model, and release playbook.
-     - `Technical Architecture <technical/spec.rst>`__
+     - Internal architecture ``[TECH-001]``..``[TECH-007]``, IEEE 754 ``Float16`` math, coding standards, threat model, and release playbook.
+     - :doc:`Technical Architecture <technical/spec>`
    * - **Architecture Decisions**
      - Immutable Architecture Decision Records and cryptographic serialization trade-off analyses.
-     - `Architecture Decisions <adrs/index.rst>`__
+     - :doc:`Architecture Decisions <adrs/index>`
    * - **Project Roadmap**
-     - Sequenced phase milestones, delivery tracking, and adversarial audit history.
-     - `Project Roadmap <project/roadmap.rst>`__
+     - Sequenced phase milestones, task dependency graphs, and adversarial audit history.
+     - :doc:`Project Roadmap <project/roadmap>`
    * - **User Guides**
      - Integration guides, code examples, and Canonical CBOR serialization tutorials.
-     - `User Manual <user/index.rst>`__
+     - :doc:`User Manual <user/index>`
    * - **Crystal API Reference**
      - Compiler-generated API documentation covering all modules, classes, structs, and exceptions.
      - `Crystal API Reference <technical/api/index.html>`__
@@ -50,7 +50,7 @@ Documentation Architecture
    user/index
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`search`
