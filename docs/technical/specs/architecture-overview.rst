@@ -22,6 +22,8 @@ The library source is organized under the ``Crystal::Cbor::Fido`` namespace with
 * **``src/crystal-cbor-fido/float16.cr``**: IEEE 754 half-precision ``binary16`` bit manipulation, subnormal scaling (:math:`2^{-24}`), round-to-nearest-even rounding, and lossless representability checks.
 * **``src/crystal-cbor-fido/encoder.cr``**: Deterministic Canonical CBOR serializer with ``MAX_DEPTH = 16`` enforcement and pre-serialized ``MapEntry`` key sorting.
 * **``src/crystal-cbor-fido/decoder.cr``**: Strict Canonical CBOR deserializer with minimal-width verification, :math:`O(1)` streaming map key order checks, ``MAX_DEPTH = 16``, and cumulative ``MAX_LEN = 10_000_000_u64`` allocation accounting.
+* **``src/crystal-cbor-fido/bounded_io.cr``**: Byte-counting ``BoundedIO`` stream wrapper enforcing ``max_bytes`` read ceilings and non-destructive trailing-byte EOF inspection.
+* **``src/crystal-cbor-fido/serializable.cr``**: Compile-time ``CBOR::Serializable`` mixin, ``@[CBOR::Field]`` and ``@[CBOR::Serializable::Options]`` annotations, and ``Codec`` type-conversion helpers.
 
 [TECH-001] Canonical Encoder and CTAP2 Map Key Sorting
 ------------------------------------------------------
@@ -115,9 +117,9 @@ Streaming Map Key Verification and Framing
 -----------------------------------------------------------------
 Fulfills ``[FUNC-006]``.
 
-Declarative Struct and Class Mapping for v0.3.0
+Declarative Struct and Class Mapping for v0.2.2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In Phase 2 ``v0.3.0``, ``Crystal::Cbor::Fido::Serializable`` (aliased as ``CBOR::Serializable``) will use Crystal compile-time AST macros (``macro included``, ``@[CBOR::Field]``, and ``@[CBOR::Serializable::Options(strict: Bool = true)]``) to synthesize zero-boilerplate ``#to_cbor(io : IO)``, ``#to_cbor : Bytes``, and ``.from_cbor(source : Bytes | IO)`` methods on domain structs and classes:
+In Phase 2 ``v0.2.2``, ``Crystal::Cbor::Fido::Serializable`` (aliased as ``CBOR::Serializable``) will use Crystal compile-time AST macros (``macro included``, ``@[CBOR::Field]``, and ``@[CBOR::Serializable::Options(strict: Bool = true)]``) to synthesize zero-boilerplate ``#to_cbor(io : IO)``, ``#to_cbor : Bytes``, and ``.from_cbor(source : Bytes | IO)`` methods on domain structs and classes:
 
 * ``@[CBOR::Field(key: 1_i64)]`` maps instance variables to integer COSE keys (e.g., ``kty: 1``, ``alg: 3``, ``crv: -1``, ``x: -2``, ``y: -3``) or string WebAuthn keys.
 * ``@[CBOR::Field(ignore: true)]`` excludes transient instance variables from serialization and deserialization.
@@ -128,9 +130,9 @@ In Phase 2 ``v0.3.0``, ``Crystal::Cbor::Fido::Serializable`` (aliased as ``CBOR:
 ---------------------------------------------------
 Fulfills ``[FUNC-007]``.
 
-Streaming Encode and Decode with Configurable Guards for v0.3.0
+Streaming Encode and Decode with Configurable Guards for v0.2.2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In Phase 2 ``v0.3.0``, ``Encoder`` and ``Decoder`` will expose direct streaming ``IO`` class methods with explicit, caller-configurable resource bounds aligned with Phase 1 constants:
+In Phase 2 ``v0.2.2``, ``Encoder`` and ``Decoder`` will expose direct streaming ``IO`` class methods with explicit, caller-configurable resource bounds aligned with Phase 1 constants:
 
 * ``Encoder.encode(value, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil`` serializes ``Value`` or ``CBOR::Serializable`` instances directly into any target ``IO`` without intermediate top-level buffer copying, defaulting ``max_depth`` to ``MAX_DEPTH`` (``16``).
 * ``Decoder.decode(io : IO, max_depth : Int32 = MAX_DEPTH, max_bytes : UInt64 = 1_048_576_u64, eof_check : Bool = true) : Value`` wraps the input stream in a byte-counting cursor that tracks exact bytes read alongside container nesting depth. ``max_depth`` defaults to ``MAX_DEPTH`` (``16``), and ``max_bytes`` defaults to ``1_048_576_u64`` (1 MiB streaming budget, capped by the absolute ceiling ``MAX_LEN = 10_000_000_u64``), raising ``DepthError`` when nesting exceeds ``max_depth`` and ``CborError`` when consumed or declared bytes exceed ``max_bytes``. When ``eof_check: true`` (default), the decoder verifies that the underlying ``IO`` has reached EOF after decoding a single top-level CBOR item and raises ``CanonicalError`` if trailing bytes remain; multi-frame stream callers pass ``eof_check: false`` to decode sequential frames from a persistent stream.

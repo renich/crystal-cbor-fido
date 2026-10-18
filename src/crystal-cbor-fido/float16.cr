@@ -1,9 +1,14 @@
 module Crystal::Cbor::Fido
   # IEEE 754 half-precision (`binary16`) floating-point conversion and canonical representability utilities.
   module Float16
+    # Bitmask isolating the 1-bit sign field (`bit 15`) of an IEEE 754 `binary16` word.
     SIGN_MASK = 0x8000_u16
-    EXP_MASK  = 0x7C00_u16
-    MAN_MASK  = 0x03FF_u16
+
+    # Bitmask isolating the 5-bit biased exponent field (`bits 14..10`) of an IEEE 754 `binary16` word.
+    EXP_MASK = 0x7C00_u16
+
+    # Bitmask isolating the 10-bit significand mantissa field (`bits 9..0`) of an IEEE 754 `binary16` word.
+    MAN_MASK = 0x03FF_u16
 
     # Converts a `Float64` to its 16-bit IEEE 754 half-precision bit pattern using round-to-nearest-even.
     def self.from_float64(value : Float64) : UInt16

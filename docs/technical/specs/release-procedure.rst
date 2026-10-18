@@ -12,37 +12,37 @@ Fulfills ``[FUNC-005]``.
 
 Multi-File Version Alignment Checklist
 --------------------------------------
-Prior to tagging any release, the version string (e.g., ``0.2.1``) must be updated in four locations across the codebase:
+Prior to tagging any release, the version string (e.g., ``0.2.2``) must be updated in four locations across the codebase:
 
 #. **`shard.yml <../../../shard.yml>`__**:
 
    .. code-block:: yaml
 
-      version: 0.2.1
+      version: 0.2.2
 
 #. **`src/crystal-cbor-fido.cr <../../../src/crystal-cbor-fido.cr>`__**:
 
    .. code-block:: crystal
 
-      VERSION = "0.2.1"
+      VERSION = "0.2.2"
 
 #. **`docs/conf.py <../../conf.py>`__**:
 
    .. code-block:: python
 
-      release = '0.2.1'
+      release = '0.2.2'
 
 #. **`CHANGELOG.rst <../../../CHANGELOG.rst>`__**:
    Promote items from ``[Unreleased]`` under a new version header using ``.. rubric::`` sections:
 
    .. code-block:: rst
 
-      [0.2.1] - 2026-10-18
+      [0.2.2] - 2026-10-18
       ====================
 
       .. rubric:: Added
 
-      - Full Sphinx documentation portal and modular specification hierarchy.
+      - Compile-time CBOR::Serializable macro and bounded streaming IO codec.
 
 Step-by-Step Release Execution Playbook
 ---------------------------------------
@@ -66,7 +66,7 @@ Stage and commit version changes adhering to Conventional Commit standards:
 .. code-block:: bash
 
    git add shard.yml src/crystal-cbor-fido.cr spec/crystal-cbor-fido_spec.cr docs/conf.py CHANGELOG.rst
-   git commit -m "chore(release): bump version to v0.2.1"
+   git commit -m "chore(release): bump version to v0.2.2"
 
 Step 3: Create Signed Annotated Git Tag
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,7 +74,7 @@ Create a GPG-signed Git tag for the release:
 
 .. code-block:: bash
 
-   git tag -s v0.2.1 -m "Release v0.2.1"
+   git tag -s v0.2.2 -m "Release v0.2.2"
 
 Step 4: Push Branch and Tags to GitLab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,4 +86,4 @@ Push the release commit and tag to the remote GitLab repository:
 
 Step 5: Automated GitLab CI Verification
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Pushing to ``master`` and tagging ``v0.2.1`` triggers the GitLab CI pipeline in `.gitlab-ci.yml <../../../.gitlab-ci.yml>`__, executing format verification, Ameba, Flaw, and the full spec suite in a clean Alpine Linux environment.
+Pushing to ``master`` and tagging ``v0.2.2`` triggers the GitLab CI pipeline in `.gitlab-ci.yml <../../../.gitlab-ci.yml>`__, executing format verification, Ameba, Flaw, and the full spec suite in a clean Alpine Linux environment.

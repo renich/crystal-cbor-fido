@@ -1,8 +1,9 @@
 require "./spec_helper"
 
+# Verifies [FUNC-001] / [FUNC-002] / [FUNC-003]
 describe Crystal::Cbor::Fido do
   it "exposes the current shard version" do
-    Crystal::Cbor::Fido::VERSION.should eq("0.2.1")
+    Crystal::Cbor::Fido::VERSION.should eq("0.2.2")
   end
 
   describe "Float16 Precision & IEEE 754 Conformance" do

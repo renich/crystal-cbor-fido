@@ -1,5 +1,6 @@
 require "./spec_helper"
 
+# Verifies [FUNC-004] / [FUNC-005]
 describe "Adversarial Code Review - CBOR FIDO" do
   describe "Depth Bounds" do
     it "prevents infinite recursion in Encoder" do

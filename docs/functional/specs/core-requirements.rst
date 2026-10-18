@@ -21,10 +21,10 @@ Functional Requirements
   The shard must execute exclusively against the Crystal standard library with zero external runtime dependencies, enforcing strict static typing, zero ``.not_nil!`` assertions, and zero-warning static analysis and release gates. Fulfilled by ``[TECH-001]``, ``[TECH-004]``, ``[TECH-005]``, and the release playbook in :doc:`../../technical/specs/architecture-overview`, :doc:`../../technical/specs/coding-standards`, :doc:`../../technical/specs/threat-model`, and :doc:`../../technical/specs/release-procedure`, and delivered by ``TASK-101`` and ``TASK-105`` in :doc:`../../project/roadmaps/phase-1-mvp`.
 
 * **[FUNC-006] Compile-Time CBOR::Serializable Macro Annotation**:
-  In Phase 2 ``v0.3.0``, the shard will provide a compile-time ``Crystal::Cbor::Fido::Serializable`` (``CBOR::Serializable``) module, ``@[CBOR::Field(key: ..., ignore: ...)]`` annotation, and ``@[CBOR::Serializable::Options(strict: Bool = true)]`` configuration for zero-boilerplate struct and class canonical serialization and deserialization. Duplicate CBOR map keys must unconditionally raise ``CanonicalError`` regardless of ``strict`` mode, while ``@[CBOR::Serializable::Options(strict: Bool = true)]`` controls solely whether unknown/unmapped CBOR keys raise ``CborError`` (``strict: true``, default) or are skipped after canonical key-order validation (``strict: false``). Fulfilled by ``[TECH-006]`` in :doc:`../../technical/specs/architecture-overview` and delivered by ``TASK-201`` and ``TASK-202`` in :doc:`../../project/roadmaps/phase-2-enhancement`.
+  In Phase 2 ``v0.2.2``, the shard will provide a compile-time ``Crystal::Cbor::Fido::Serializable`` (``CBOR::Serializable``) module, ``@[CBOR::Field(key: ..., ignore: ...)]`` annotation, and ``@[CBOR::Serializable::Options(strict: Bool = true)]`` configuration for zero-boilerplate struct and class canonical serialization and deserialization. Duplicate CBOR map keys must unconditionally raise ``CanonicalError`` regardless of ``strict`` mode, while ``@[CBOR::Serializable::Options(strict: Bool = true)]`` controls solely whether unknown/unmapped CBOR keys raise ``CborError`` (``strict: true``, default) or are skipped after canonical key-order validation (``strict: false``). Fulfilled by ``[TECH-006]`` in :doc:`../../technical/specs/architecture-overview` and delivered by ``TASK-201`` and ``TASK-202`` in :doc:`../../project/roadmaps/phase-2-enhancement`.
 
 * **[FUNC-007] Bounded Streaming IO Codec and RFC 8949 Appendix A Vector Verification**:
-  In Phase 2 ``v0.3.0``, the shard will expose bounded streaming ``IO`` entrypoints ``Encoder.encode(value, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil`` and ``Decoder.decode(io : IO, max_depth : Int32 = MAX_DEPTH, max_bytes : UInt64 = 1_048_576_u64, eof_check : Bool = true) : Value`` where ``MAX_DEPTH = 16`` aligns with Phase 1 container depth limits, ``max_bytes = 1_048_576_u64`` enforces a 1 MiB default streaming budget bounded by the absolute ceiling ``MAX_LEN = 10_000_000_u64``, and ``eof_check: true`` rejects trailing bytes at EOF for single-frame payloads while ``eof_check: false`` supports multi-frame stream decoding, verified against the complete RFC 8949 Appendix A diagnostic vector corpus. Fulfilled by ``[TECH-005]`` and ``[TECH-007]`` in :doc:`../../technical/specs/architecture-overview` and :doc:`../../technical/specs/threat-model`, and delivered by ``TASK-203`` and ``TASK-204`` in :doc:`../../project/roadmaps/phase-2-enhancement`.
+  In Phase 2 ``v0.2.2``, the shard will expose bounded streaming ``IO`` entrypoints ``Encoder.encode(value, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil`` and ``Decoder.decode(io : IO, max_depth : Int32 = MAX_DEPTH, max_bytes : UInt64 = 1_048_576_u64, eof_check : Bool = true) : Value`` where ``MAX_DEPTH = 16`` aligns with Phase 1 container depth limits, ``max_bytes = 1_048_576_u64`` enforces a 1 MiB default streaming budget bounded by the absolute ceiling ``MAX_LEN = 10_000_000_u64``, and ``eof_check: true`` rejects trailing bytes at EOF for single-frame payloads while ``eof_check: false`` supports multi-frame stream decoding, verified against the complete RFC 8949 Appendix A diagnostic vector corpus. Fulfilled by ``[TECH-005]`` and ``[TECH-007]`` in :doc:`../../technical/specs/architecture-overview` and :doc:`../../technical/specs/threat-model`, and delivered by ``TASK-203`` and ``TASK-204`` in :doc:`../../project/roadmaps/phase-2-enhancement`.
 
 Requirement Traceability Matrix
 -------------------------------
@@ -67,9 +67,9 @@ Requirement Traceability Matrix
      - Compile-time ``CBOR::Serializable`` macro annotation
      - ``[TECH-006]``
      - ``TASK-201``, ``TASK-202``
-     - ``v0.3.0``
+     - ``v0.2.2``
    * - ``[FUNC-007]``
      - Bounded streaming ``IO`` codec & RFC 8949 vectors
      - ``[TECH-005]``, ``[TECH-007]``
      - ``TASK-203``, ``TASK-204``
-     - ``v0.3.0``
+     - ``v0.2.2``

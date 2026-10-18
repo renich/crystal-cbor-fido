@@ -13,3 +13,4 @@ Audit History
 * **2026-09-19**: ``v0.1.2`` Crucible Protocol Adversarial Audit and ``Float16`` Subnormal Remediation — Status: Approved.
 * **2026-10-18**: ``v0.2.0`` Echelon and Crucible Canonical Hardening Audit covering minimal float decoding, trailing-byte rejection, and cumulative allocation caps — Status: Approved.
 * **2026-10-18**: ``v0.2.1`` Modular Specification, D2 Architecture and Roadmap Diagrams, Bidirectional Traceability ``[FUNC-001]``..``[FUNC-007]`` <-> ``[TECH-001]``..``[TECH-007]``, and ``init/lib`` Alignment Audit — Status: PASS: ZERO DEFECTS and PASS: ZERO DEPENDENCY VIOLATIONS.
+* **2026-10-18**: ``v0.2.2`` Phase 2 Implementation, ``CBOR::Serializable`` Macro Synthesis, Bounded Streaming ``IO`` Codec, and RFC 8949 Appendix A Conformance Suite Audit — Status: PASS: ZERO DEFECTS (57 specs passing, 0 Ameba issues, 0 Flaw findings).

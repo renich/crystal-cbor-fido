@@ -1,10 +1,11 @@
 module Crystal::Cbor::Fido
   # Serializes Crystal `Value` objects into deterministic FIDO2/CTAP2 Canonical CBOR.
   class Encoder
+    # Maximum allowed container nesting depth per CTAP2 canonical profile.
     MAX_DEPTH = 16
 
     # Represents a pre-encoded map entry used for canonical key sorting and duplicate detection.
-    record MapEntry, key_bytes : Bytes, key : Value, value : Value do
+    record MapEntry, key_bytes : Bytes, value : Value | Serializable do
       include Comparable(MapEntry)
 
       # Compares two map entries by their canonical key byte representations.
@@ -15,30 +16,66 @@ module Crystal::Cbor::Fido
 
     @io : IO
     @depth : Int32
+    @max_depth : Int32
 
-    # Creates a new `Encoder` writing to *io* starting at nesting *depth*.
-    def initialize(@io : IO, @depth : Int32 = 0) : Nil
+    # Encodes *value* directly to *io* in Canonical CBOR format, enforcing *max_depth*.
+    def self.encode(value : Value, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil
+      new(io, 0, max_depth).encode(value)
     end
 
-    # Encodes *value* to the underlying `IO`, enforcing `MAX_DEPTH` and canonical map sorting.
+    # Encodes a `Serializable` instance directly to *io* in Canonical CBOR format.
+    def self.encode(value : Serializable, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil
+      value.to_cbor(io, max_depth: max_depth)
+    end
+
+    # Creates a new `Encoder` writing to *io* starting at nesting *depth* with ceiling *max_depth*.
+    def initialize(@io : IO, @depth : Int32 = 0, @max_depth : Int32 = MAX_DEPTH) : Nil
+      return unless @max_depth <= 0 || @max_depth > MAX_DEPTH
+      raise DepthError.new("Max nesting depth of #{MAX_DEPTH} exceeded")
+    end
+
+    # Encodes *value* to the underlying `IO`, enforcing `max_depth` and canonical map sorting.
     def encode(value : Value) : Nil
       @depth += 1
-      raise DepthError.new("Max nesting depth of #{MAX_DEPTH} exceeded") if @depth > MAX_DEPTH
+      raise DepthError.new("Max nesting depth of #{@max_depth} exceeded") if @depth > @max_depth
 
       begin
-        case value
-        when Nil     then encode_null
-        when Bool    then encode_bool(value)
-        when Int64   then encode_int(value)
-        when UInt64  then encode_uint(value)
-        when Float64 then encode_float(value)
-        when String  then encode_string(value)
-        when Bytes   then encode_bytes(value)
-        when Array   then encode_array(value)
-        when Hash    then encode_map(value)
-        end
+        dispatch_encode(value)
       ensure
         @depth -= 1
+      end
+    end
+
+    # Encodes a canonical CBOR map from entries populated by the block without allocating a `Hash(Value, Value)`.
+    def encode_map_entries(& : Array(MapEntry) -> Nil) : Nil
+      @depth += 1
+      raise DepthError.new("Max nesting depth of #{@max_depth} exceeded") if @depth > @max_depth
+
+      begin
+        entries = Array(MapEntry).new
+        yield entries
+        write_sorted_entries(entries)
+      ensure
+        @depth -= 1
+      end
+    end
+
+    # Appends a pre-encoded canonical key and value pair to *entries*.
+    def append_entry(entries : Array(MapEntry), key : Value, value : Value | Serializable) : Nil
+      entries << MapEntry.new(canonical_key_bytes(key), value)
+    end
+
+    private def dispatch_encode(value : Value) : Nil
+      case value
+      when Nil     then encode_null
+      when Bool    then encode_bool(value)
+      when Int64   then encode_int(value)
+      when UInt64  then encode_uint(value)
+      when Float64 then encode_float(value)
+      when String  then encode_string(value)
+      when Bytes   then encode_bytes(value)
+      when Array   then encode_array(value)
+      when Hash    then encode_map(value)
       end
     end
 
@@ -119,10 +156,11 @@ module Crystal::Cbor::Fido
 
     private def encode_map(map : Hash(Value, Value)) : Nil
       entries = Array(MapEntry).new(map.size)
-      map.each do |key, val|
-        entries << MapEntry.new(canonical_key_bytes(key), key, val)
-      end
+      map.each { |key, val| append_entry(entries, key, val) }
+      write_sorted_entries(entries)
+    end
 
+    private def write_sorted_entries(entries : Array(MapEntry)) : Nil
       entries.sort!
       (0...(entries.size - 1)).each do |idx|
         if entries[idx].key_bytes == entries[idx + 1].key_bytes
@@ -133,13 +171,14 @@ module Crystal::Cbor::Fido
       write_type_and_arg(0xa0_u8, entries.size.to_u64)
       entries.each do |entry|
         @io.write(entry.key_bytes)
-        encode(entry.value)
+        val = entry.value
+        val.is_a?(Serializable) ? val.to_cbor(self) : encode(val)
       end
     end
 
     private def canonical_key_bytes(key : Value) : Bytes
       mem = IO::Memory.new
-      Encoder.new(mem, @depth).encode(key)
+      Encoder.new(mem, @depth, @max_depth).encode(key)
       mem.to_slice
     end
   end

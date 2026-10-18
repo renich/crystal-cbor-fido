@@ -11,20 +11,20 @@ vars: {
 classes: {
   milestone: {
     style: {
-      stroke: "#2B6CB0"
+      stroke: "#2F855A"
       stroke-width: 2
       border-radius: 8
-      fill: "#EBF8FF"
+      fill: "#F0FFF4"
     }
   }
   task_node: {
     shape: rectangle
     style: {
-      stroke: "#3182CE"
+      stroke: "#2F855A"
       stroke-width: 2
       border-radius: 6
-      fill: "#BEE3F8"
-      font-color: "#2A4365"
+      fill: "#C6F6D5"
+      font-color: "#22543D"
     }
   }
 }
@@ -32,11 +32,11 @@ classes: {
 m2_1: "Milestone 2.1: Compile-Time CBOR::Serializable Macro" {
   class: milestone
 
-  t201: "TASK-201 (Task 2.1): @[CBOR::Field] & Options Annotation\nFulfills: [FUNC-006], [TECH-006]\nBlocked By: TASK-105 | Unblocks: TASK-202\nStatus: Planned v0.3.0" {
+  t201: "TASK-201 (Task 2.1): @[CBOR::Field] & Options Annotation\nFulfills: [FUNC-006], [TECH-006]\nBlocked By: TASK-105 | Unblocks: TASK-202\nStatus: Completed v0.2.2" {
     class: task_node
   }
 
-  t202: "TASK-202 (Task 2.2): CBOR::Serializable AST Synthesis\nFulfills: [FUNC-006], [TECH-006]\nBlocked By: TASK-201 | Unblocks: TASK-203\nStatus: Planned v0.3.0" {
+  t202: "TASK-202 (Task 2.2): CBOR::Serializable AST Synthesis\nFulfills: [FUNC-006], [TECH-006]\nBlocked By: TASK-201 | Unblocks: TASK-203\nStatus: Completed v0.2.2" {
     class: task_node
   }
 
@@ -46,11 +46,11 @@ m2_1: "Milestone 2.1: Compile-Time CBOR::Serializable Macro" {
 m2_2: "Milestone 2.2: Bounded Streaming IO & RFC 8949 Vectors" {
   class: milestone
 
-  t203: "TASK-203 (Task 2.3): Bounded Streaming IO Cursor Codec\nFulfills: [FUNC-007], [TECH-005], [TECH-007]\nBlocked By: TASK-202 | Unblocks: TASK-204\nStatus: Planned v0.3.0" {
+  t203: "TASK-203 (Task 2.3): Bounded Streaming IO Cursor Codec\nFulfills: [FUNC-007], [TECH-005], [TECH-007]\nBlocked By: TASK-202 | Unblocks: TASK-204\nStatus: Completed v0.2.2" {
     class: task_node
   }
 
-  t204: "TASK-204 (Task 2.4): RFC 8949 Appendix A Vector Harness\nFulfills: [FUNC-007], [TECH-005], [TECH-007]\nBlocked By: TASK-203 | Unblocks: v0.3.0 Release\nStatus: Planned v0.3.0" {
+  t204: "TASK-204 (Task 2.4): RFC 8949 Appendix A Vector Harness\nFulfills: [FUNC-007], [TECH-005], [TECH-007]\nBlocked By: TASK-203 | Unblocks: v0.2.2 Release\nStatus: Completed v0.2.2" {
     class: task_node
   }
 

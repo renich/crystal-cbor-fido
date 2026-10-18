@@ -29,8 +29,8 @@ Executive Phase Summary
      - Completed
      - ``[FUNC-001]``..``[FUNC-005]``, ``[TECH-001]``..``[TECH-005]``
    * - :doc:`roadmaps/phase-2-enhancement`
-     - ``v0.3.0``
-     - Planned
+     - ``v0.2.2``
+     - Completed
      - ``[FUNC-006]``, ``[FUNC-007]``, ``[TECH-005]``..``[TECH-007]``
 
 .. toctree::

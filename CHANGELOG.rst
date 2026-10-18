@@ -10,9 +10,15 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+[0.2.2] - 2026-10-18
+====================
+
 .. rubric:: Added
 
-- Added Phase 2 (``v0.3.0``) functional and technical specifications ``[FUNC-006]``/``[TECH-006]`` (compile-time ``CBOR::Serializable`` macro, ``@[CBOR::Field]``, and ``@[CBOR::Serializable::Options(strict: Bool = true)]`` with unconditional duplicate-key rejection) and ``[FUNC-007]``/``[TECH-007]`` (bounded streaming ``IO`` codec with ``max_depth : Int32 = MAX_DEPTH``, ``max_bytes : UInt64 = 1_048_576_u64``, and ``eof_check : Bool = true``, plus RFC 8949 Appendix A vector verification), documented in ``ADR-002`` (``docs/adrs/2026-10-18-phase-2-serializable-and-streaming.rst``).
+- Implemented ``Crystal::Cbor::Fido::Serializable`` (``CBOR::Serializable``), ``@[CBOR::Field]``, and ``@[CBOR::Serializable::Options(strict: Bool = true)]`` in ``src/crystal-cbor-fido/serializable.cr`` for compile-time canonical CBOR struct/class serialization and deserialization with integer and string map keys, nested models, unconditional ``CanonicalError`` on duplicate keys, and top-level ``alias CBOR = Crystal::Cbor::Fido`` (``TASK-201``, ``TASK-202``, ``[FUNC-006]``, ``[TECH-006]``).
+- Implemented bounded streaming ``IO`` codecs ``Encoder.encode(value, io : IO, max_depth : Int32 = MAX_DEPTH) : Nil`` and ``Decoder.decode(io : IO, max_depth : Int32 = MAX_DEPTH, max_bytes : UInt64 = 1_048_576_u64, eof_check : Bool = true) : Value`` backed by ``BoundedIO`` in ``src/crystal-cbor-fido/bounded_io.cr`` (``TASK-203``, ``[FUNC-007]``, ``[TECH-007]``).
+- Added ``spec/serializable_spec.cr`` and ``spec/rfc8949_vectors_spec.cr`` verifying ``CBOR::Serializable``, bounded streaming ``IO``, and the RFC 8949 Appendix A diagnostic test vector suite across 57 passing specs (``TASK-204``, ``[FUNC-006]``, ``[FUNC-007]``, ``[TECH-005]``–``[TECH-007]``).
+- Added Phase 2 (``v0.2.2``) functional and technical specifications ``[FUNC-006]``/``[TECH-006]`` and ``[FUNC-007]``/``[TECH-007]``, documented in ``ADR-002`` (``docs/adrs/2026-10-18-phase-2-serializable-and-streaming.rst``).
 - Added dependency-tracked atomic roadmap tasks (``TASK-101`` through ``TASK-105`` and ``TASK-201`` through ``TASK-204``) with explicit ``Fulfills``, ``Blocked By``, ``Unblocks``, and ``Critical Path`` chains across ``docs/project/``.
 - Added D2 architecture and roadmap diagrams (``docs/diagrams/architecture.d2``, ``docs/diagrams/roadmaps/roadmap.d2``, ``docs/diagrams/roadmaps/phase-1-mvp.d2``, ``docs/diagrams/roadmaps/phase-2-enhancement.d2``) and compiled SVG assets.
 - Added visual branding assets ``assets/banner.svg`` and ``assets/icon.svg`` and aligned ``README.md`` and ``CONTRIBUTING.rst`` with the ``../init/lib`` standard.

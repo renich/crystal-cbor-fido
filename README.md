@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <a href="https://gitlab.com/renich/crystal-cbor-fido/-/releases"><img src="https://img.shields.io/badge/version-v0.2.1-blue.svg?style=flat-square" alt="Version 0.2.1" /></a>
+  <a href="https://gitlab.com/renich/crystal-cbor-fido/-/releases"><img src="https://img.shields.io/badge/version-v0.2.2-blue.svg?style=flat-square" alt="Version 0.2.2" /></a>
   <a href="https://crystal-lang.org/"><img src="https://img.shields.io/badge/crystal-%3E%3D%201.21.0-black.svg?style=flat-square&logo=crystal&logoColor=white" alt="Crystal >= 1.21.0" /></a>
   <a href="https://gitlab.com/renich/crystal-cbor-fido/-/pipelines"><img src="https://img.shields.io/badge/pipeline-passing-brightgreen.svg?style=flat-square&logo=gitlab" alt="GitLab CI Passing" /></a>
-  <a href="https://gitlab.com/renich/crystal-cbor-fido"><img src="https://img.shields.io/badge/specs-39%20passing-success.svg?style=flat-square&logo=crystal" alt="Specs Passing" /></a>
+  <a href="https://gitlab.com/renich/crystal-cbor-fido"><img src="https://img.shields.io/badge/specs-57%20passing-success.svg?style=flat-square&logo=crystal" alt="Specs Passing" /></a>
   <a href="https://github.com/crystal-ameba/ameba"><img src="https://img.shields.io/badge/ameba-0%20violations-brightgreen.svg?style=flat-square" alt="Ameba Clean" /></a>
   <a href="https://github.com/kdairatchi/flaw"><img src="https://img.shields.io/badge/flaw-0%20findings-brightgreen.svg?style=flat-square" alt="Flaw Clean" /></a>
 </p>
@@ -35,9 +35,9 @@
 ### Key Highlights
 
 1. **Strict Canonical CBOR Compliance**: Enforces minimal integer and floating-point widths, deterministic CTAP2 map key ordering (shorter byte length first, then unsigned byte-wise lexicographical order), duplicate serialized key rejection on both encode and decode, and top-level trailing-byte rejection.
-2. **IEEE 754 Half-Precision (`Float16`) Narrowing**: Lossless `Float64 -> Float32 -> Float16` narrowing with exact subnormal precision ($1 \times 2^{-24} \approx 5.96 \times 10^{-8}$), round-to-nearest-even bit manipulation with guard and sticky bit inspection, canonical `0x7e00` `NaN`, and `+0.0` `0x0000` normalization.
-3. **Defensive Resource Bounding & 128-Bit Integer Safety**: Enforces `MAX_DEPTH = 16` across containers and serialized map keys, caps cumulative session allocations at `MAX_LEN = 10_000_000` bytes, and uses `Int128` signed intermediate arithmetic for negative integer decoding.
-4. **Zero Runtime Dependencies & Multi-Tier Documentation**: Executes purely on the Crystal Standard Library and includes complete Business, Functional (`[FUNC-001]`–`[FUNC-007]`), Technical (`[TECH-001]`–`[TECH-007]`), ADR, D2 diagram, and compiler-generated API documentation.
+2. **Compile-Time `CBOR::Serializable` Macro**: Zero-boilerplate struct and class serialization via `include CBOR::Serializable`, `@[CBOR::Field(key: ..., ignore: ...)]`, and `@[CBOR::Serializable::Options(strict: Bool = true)]` supporting integer COSE labels (`1`, `3`, `-1`, `-2`, `-3`) and UTF-8 string keys.
+3. **IEEE 754 Half-Precision (`Float16`) Narrowing**: Lossless `Float64 -> Float32 -> Float16` narrowing with exact subnormal precision ($1 \times 2^{-24} \approx 5.96 \times 10^{-8}$), round-to-nearest-even bit manipulation with guard and sticky bit inspection, canonical `0x7e00` `NaN`, and `+0.0` `0x0000` normalization.
+4. **Bounded Streaming `IO` & Defensive Resource Limits**: Supports direct `IO` streaming with configurable `max_depth : Int32 = 16`, `max_bytes : UInt64 = 1_048_576_u64` (bounded by `MAX_LEN = 10_000_000_u64`), and `eof_check : Bool = true`, verified against the RFC 8949 Appendix A test vector corpus.
 
 ---
 
@@ -49,7 +49,7 @@ Add `crystal-cbor-fido` to your application's `shard.yml`:
 dependencies:
   crystal-cbor-fido:
     gitlab: renich/crystal-cbor-fido
-    version: ~> 0.2.1
+    version: ~> 0.2.2
 ```
 
 Then install the shard:
@@ -65,25 +65,33 @@ shards install
 ```crystal
 require "crystal-cbor-fido"
 
-# Build a canonical CBOR map using the recursive Value union
-data = Hash(Crystal::Cbor::Fido::Value, Crystal::Cbor::Fido::Value).new
-data["user_id"] = 100_i64
-data["challenge"] = "rand123"
+# 1. Strongly-typed FIDO2/COSE structs via CBOR::Serializable
+struct CoseEc2Key
+  include CBOR::Serializable
 
-# Encode into deterministic Canonical CBOR wire bytes
-bytes = Crystal::Cbor::Fido.encode(data)
-puts "Encoded CBOR (Hex): #{bytes.hexstring}"
+  @[CBOR::Field(key: 1_i64)]
+  getter kty : Int64
 
-# Decode and validate canonical CBOR bytes (rejects non-canonical inputs and trailing bytes)
-decoded_data = Crystal::Cbor::Fido.decode(bytes)
-puts "Decoded Data: #{decoded_data.inspect}"
+  @[CBOR::Field(key: 3_i64)]
+  getter alg : Int64
 
-# Rescue typed domain exceptions
-begin
-  Crystal::Cbor::Fido.decode(Bytes[0x18, 0x05])
-rescue ex : Crystal::Cbor::Fido::CanonicalError
-  STDERR.puts "Canonical violation: #{ex.message}"
+  @[CBOR::Field(key: -1_i64)]
+  getter crv : Int64
+
+  def initialize(@kty : Int64, @alg : Int64, @crv : Int64) : Nil
+  end
 end
+
+key = CoseEc2Key.new(kty: 2_i64, alg: -7_i64, crv: 1_i64)
+wire_bytes = key.to_cbor
+restored = CoseEc2Key.from_cbor(wire_bytes)
+
+# 2. Dynamic maps and bounded IO streaming
+io = IO::Memory.new
+Crystal::Cbor::Fido.encode({"rp_id" => "evalinux.com", "uv" => true} of CBOR::Value => CBOR::Value, io)
+io.rewind
+decoded_data = Crystal::Cbor::Fido.decode(io, max_bytes: 65_536_u64, eof_check: true)
+puts "Decoded Data: #{decoded_data.inspect}"
 ```
 
 ---

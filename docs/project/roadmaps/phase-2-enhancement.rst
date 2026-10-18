@@ -4,7 +4,7 @@ Phase 2: Enhancement
 
 Timeline and Objectives
 -----------------------
-Extend ``crystal-cbor-fido`` in ``v0.3.0`` with compile-time ``CBOR::Serializable`` macro annotations for zero-boilerplate FIDO2/COSE struct and class serialization, bounded streaming ``IO`` codecs, and exhaustive RFC 8949 Appendix A test vector verification.
+Extend ``crystal-cbor-fido`` in ``v0.2.2`` with compile-time ``CBOR::Serializable`` macro annotations for zero-boilerplate FIDO2/COSE struct and class serialization, bounded streaming ``IO`` codecs, and exhaustive RFC 8949 Appendix A test vector verification.
 
 Phase 2 Dependency Graph
 ------------------------
@@ -19,7 +19,7 @@ Milestone 2.1: Compile-Time CBOR::Serializable Macro
 TASK-201: CBOR::Field Annotation and Canonical Key Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Status**: Planned (``v0.3.0``)
+* **Status**: Completed (``v0.2.2``)
 * **Fulfills**: ``[FUNC-006]``, ``[TECH-006]``
 * **Blocked By**: ``TASK-105``
 * **Unblocks**: ``TASK-202``
@@ -28,7 +28,7 @@ TASK-201: CBOR::Field Annotation and Canonical Key Metadata
 TASK-202: CBOR::Serializable AST Macro Synthesis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Status**: Planned (``v0.3.0``)
+* **Status**: Completed (``v0.2.2``)
 * **Fulfills**: ``[FUNC-006]``, ``[TECH-006]``
 * **Blocked By**: ``TASK-201``
 * **Unblocks**: ``TASK-203``
@@ -40,7 +40,7 @@ Milestone 2.2: Bounded Streaming IO and RFC 8949 Appendix A Vectors
 TASK-203: Bounded Streaming IO Cursor Codec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Status**: Planned (``v0.3.0``)
+* **Status**: Completed (``v0.2.2``)
 * **Fulfills**: ``[FUNC-007]``, ``[TECH-005]``, ``[TECH-007]``
 * **Blocked By**: ``TASK-202``
 * **Unblocks**: ``TASK-204``
@@ -49,10 +49,10 @@ TASK-203: Bounded Streaming IO Cursor Codec
 TASK-204: RFC 8949 Appendix A Vector Conformance Suite
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Status**: Planned (``v0.3.0``)
+* **Status**: Completed (``v0.2.2``)
 * **Fulfills**: ``[FUNC-007]``, ``[TECH-005]``, ``[TECH-007]``
 * **Blocked By**: ``TASK-203``
-* **Unblocks**: ``v0.3.0`` Release
+* **Unblocks**: ``v0.2.2`` Release
 * **Deliverable**: Integrate the complete RFC 8949 Appendix A diagnostic vector corpus into ``spec/``, verifying bit-exact canonical encoding, strict decoding rejection of non-canonical vectors, and bounded streaming ``IO`` conformance.
 
 Critical Path

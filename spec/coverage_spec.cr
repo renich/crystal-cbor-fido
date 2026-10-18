@@ -1,5 +1,6 @@
 require "./spec_helper"
 
+# Verifies [FUNC-001] / [FUNC-002] / [FUNC-004]
 describe Crystal::Cbor::Fido do
   describe "Float16 Subnormal and Edge Case Coverage" do
     it "handles subnormal floats in from_float64 and to_float64" do
