@@ -1,6 +1,10 @@
 require "./spec_helper"
 
 describe Crystal::Cbor::Fido do
+  it "exposes the current shard version" do
+    Crystal::Cbor::Fido::VERSION.should eq("0.2.1")
+  end
+
   describe "Float16 Precision & IEEE 754 Conformance" do
     it "handles zero and negative zero" do
       Crystal::Cbor::Fido::Float16.from_float64(0.0).should eq(0x0000_u16)

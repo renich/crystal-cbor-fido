@@ -1,6 +1,6 @@
 # Canonical CBOR (RFC 8949 Section 4.2 / FIDO2 CTAP2 Section 6) encoder and decoder.
 module Crystal::Cbor::Fido
-  VERSION = "0.2.0"
+  VERSION = "0.2.1"
 
   # Encodes *value* into its deterministic Canonical CBOR byte representation.
   def self.encode(value : Value) : Bytes

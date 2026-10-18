@@ -8,17 +8,21 @@ MAKEFLAGS += --no-builtin-rules
 
 .DEFAULT_GOAL := all
 
-CRYSTAL ?= crystal
-SHARDS  ?= shards
-AMEBA   := bin/ameba
-FLAW    := bin/flaw
+CRYSTAL  ?= crystal
+SHARDS   ?= shards
+CRSTLINT ?= crstlint
+RSTCHECK ?= rstcheck
+AMEBA    := bin/ameba
+FLAW     := bin/flaw
+
+RST_FILES := $(wildcard *.rst) $(shell find docs -type f -name '*.rst' 2>/dev/null)
 
 PREFIX  ?= /usr/local
 DESTDIR ?=
 DATADIR ?= $(PREFIX)/share
 DOCDIR  ?= $(DATADIR)/doc/crystal-cbor-fido
 
-.PHONY: all check test lint format docs deps install uninstall clean help
+.PHONY: all check test lint format doc-check docs deps install uninstall clean help
 
 all: lint test ## Run static analysis and test suite
 
@@ -48,8 +52,13 @@ lint: $(AMEBA) $(FLAW) ## Run Ameba and Flaw static analysis
 format: ## Format Crystal source and spec files
 	$(CRYSTAL) tool format src spec
 
-docs: ## Generate Crystal API documentation
-	$(CRYSTAL) docs --output=docs/technical/api
+doc-check: ## Lint reStructuredText documentation with crstlint and rstcheck
+	@if command -v $(CRSTLINT) >/dev/null 2>&1; then $(CRSTLINT) -r .; fi
+	@if command -v $(RSTCHECK) >/dev/null 2>&1; then $(RSTCHECK) $(RST_FILES); fi
+
+docs: ## Generate Crystal API documentation and Sphinx dirhtml portal
+	$(CRYSTAL) docs -o docs/technical/api
+	$(MAKE) -C docs dirhtml
 
 install: docs ## Install documentation to DESTDIR/DOCDIR
 	install -d $(DESTDIR)$(DOCDIR)
@@ -59,7 +68,7 @@ uninstall: ## Remove installed documentation from DESTDIR/DOCDIR
 	rm -rf $(DESTDIR)$(DOCDIR)
 
 clean: ## Remove generated documentation and build artifacts
-	rm -rf docs/technical/api .crystal lib bin shard.lock
+	rm -rf docs/technical/api docs/build .crystal lib bin shard.lock
 
 help: ## Display available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'

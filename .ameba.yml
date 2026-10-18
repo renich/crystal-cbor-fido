@@ -3,8 +3,16 @@ Globs:
   - spec/**/*.cr
 
 Excluded:
+  - .agents/**
   - lib
+  - lib/**
   - bin
+  - bin/**
+  - .shards/**
+  - docs/build/**
+  - docs/technical/api/**
+  - public/**
+  - scratch/**
 
 Layout/LineLength:
   Enabled: true
